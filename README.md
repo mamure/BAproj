@@ -10,6 +10,13 @@ Deadline: 10.6.2025
 
 # Weekly report
 ## Week 1 (3-9 feb)
+I have looked into the definitions of wireless mesh networks (WMNs) and their components: Internet Gateway (IGW), Access Points (AP), and Client Devices (CD). I have also explored the different architectures of WMNs (Backbone, P2P, and Hybrid). I am still reviewing the definitions and relevant materials to determine which type to use for the simulation.
+
+I have briefly examined the different performance metrics used, such as Hop-count, WCEET, and ETX, and I am still considering which one to use.
+
+On the implementation side, I have looked into using the NetworkX Python library. This library uses graph theory for network analysis, which could be useful for implementing different types of nodes (IGW, AP, CD) and edges with various attributes such as connectivity, error rate, and more.
+
+I found a technical report on NS-3 simulation of mesh networks, which I plan to look into next week.
 ## Week 2 (10-16 feb)
 ## Week 3 (17-23 feb)
 ## Week 4 (24 feb-2 mar)

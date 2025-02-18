@@ -18,7 +18,7 @@ On the implementation side, I have looked into using the NetworkX Python library
 
 I found a technical report on NS-3 simulation of mesh networks, which I plan to look into next week.
 ## Week 2 (10-16 feb)
-I have read and found—contrary to my initial assumption—that the routing algorithm is essentially a load-balancing algorithm, depending on the metric I choose. I plan to create/use the following routing metrics for the project:
+I have read and found, contrary to my initial assumption, that the routing algorithm is essentially a load-balancing algorithm, depending on the metric I choose. I plan to create/use the following routing metrics for the project:
 - Hop-count: All links are counted as 1, and the path with the fewest hops wins, effectively making it a Breadth-First Search. This serves as a baseline metric.
 - WCETT: Individual link weights are combined into a path metric, Weighted Cumulative Expected Transmission Time (ETT), which explicitly accounts for interference among links using the same channel. This is a more “information-based” metric and will be used for actual comparison.
 - WCETT-LB: An enhancement of WCETT that incorporates load balancing—likely the most relevant algorithm for my project.

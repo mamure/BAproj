@@ -5,8 +5,9 @@ GitHub repository for my bachelor’s project in Computer Science at UCPH in the
 Deadline: 10.6.2025
 
 # TODO
-* Read up on mesh network and wireless mesh network definitions.
-* Find a way to simulate a network
+~~Read up on mesh network and wireless mesh network definitions.~~
+Find a way to simulate a network
+* See how the hop count can be tested in terms of error rate.
 
 # Weekly report
 ## Week 1 (3-9 feb)

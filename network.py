@@ -2,22 +2,26 @@ class Node:
     def __init__(self, node_id, type):
         self.id = node_id
         self.type = type
-        self.neighbors = []
+        self.neighbors = set()
         self.routing_table = {}
-        self.traffic_load = 0
+        self.load = 0
         self.congest_status = False
+        
+    def __repr__(self):
+        return f"Node(id={self.id}, type={self.device_type})"
 
 class Edge:
-    def __init__(self, edge_id, node_a, node_b, weight):
+    def __init__(self, edge_id, src, dst, bandwidth, loss_rate, channel):
         self.id = edge_id
-        self.node_a = node_a
-        self.node_b = node_b
-        self.weight = weight
-        # self.bandwidth = bandwidth
-        # self.delay = delay
-        # self.loss_rate = loss_rate
-        # self.load = load
+        self.src = src
+        self.dst = dst
+        self.bandwidth = bandwidth
+        self.loss_rate = loss_rate
+        self.channel = channel
         
+    def __repr__(self):
+        return f"Edge({self.node_a.id} <-> {self.node_b.id})"
+    
 class Graph:
     def __init__(self):
         self.node_id_counter = 0
@@ -31,9 +35,9 @@ class Graph:
         self.node_id_counter += 1
         return node
     
-    def add_edge(self, node_a, node_b, weight):
+    def add_edge(self, node_a, node_b, packet_sz, bandwidth, loss_rate):
         if node_b.id not in node_a.neighbors:
-            edge = Edge(self.edge_id_counter, node_a, node_b, weight)
+            edge = Edge(self.edge_id_counter, node_a, node_b, packet_sz, bandwidth, loss_rate)
             self.edges[self.edge_id_counter] = edge
             self.edge_id_counter += 1
             node_a.neighbors.append(node_b.id)

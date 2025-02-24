@@ -33,6 +33,11 @@ As for performance metrics to compare these algorithms, throughput (kbps) was my
 
 I’ve slowly started writing the background section. It’s been a bit difficult at first, mainly because I think I just need to get used to it.
 ## Week 3 (17-23 feb)
+This week, I've finished the Hop-count and started working on the WCETT. I'm a bit confused about the broader project scope, specifically how to approach the actual testing and benchmark tests. I think it might become clearer once I've implemented the routing algorithms (WCETT and WCETT-LB) so that the "standalone, not dependent on other implementations" routing algorithms are completed.
+
+I've also been thinking about how "realistic" the testing should be — for example, whether the packet contents should reflect real-life packets or just have arbitrary sizes that simulate realistic packet sending. However, I do know that I will be using ACK packets in the project.
+
+Lastly, I've been writing more consistently alongside the implementation.
 ## Week 4 (24 feb-2 mar)
 ## Week 5 (3-9 mar)
 ## Week 6 (10-16 mar)

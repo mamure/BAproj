@@ -1,11 +1,10 @@
 from collections import deque
 
 def shortest_path(graph, start_id, target_id):
-    if start_id == target_id: # source node is destination node 
+    if start_id == target_id:
         return None
     
-    # id to node object
-    start_node = graph.nodes[start_id] 
+    start_node = graph.nodes[start_id]
     target_node = graph.nodes[target_id]
     
     visited = set()
@@ -13,7 +12,7 @@ def shortest_path(graph, start_id, target_id):
 
     while queue:
         current_node, path = queue.popleft()
-
+        print(f'Current node: {current_node.id}')
         if current_node.id in visited:
             continue
         
@@ -23,8 +22,8 @@ def shortest_path(graph, start_id, target_id):
             return path
         
         for neighbor_id in current_node.neighbors:
+            print(f'Path is: {path}')
             if neighbor_id not in visited:
-                visited.add(neighbor_id)
                 queue.append((graph.nodes[neighbor_id], path + [neighbor_id]))
 
     return None

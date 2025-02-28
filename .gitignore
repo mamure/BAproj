@@ -31,3 +31,6 @@ coverage/
 *.out
 *.o
 *.class
+
+complex_graph.html
+simple_graph.html

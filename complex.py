@@ -74,9 +74,9 @@ def visualize_network(network):
     print(f"Network graph saved at '{output_path}'. Open it in your browser to view.")
     
 if __name__ == "__main__":
-    x = 2  # Number of IGWs
-    y = 10  # Number of Routers
-    z = 50 # Number of Clients
+    x = 1  # Number of IGWs
+    y = 5  # Number of Routers
+    z = 30 # Number of Clients
 
     network = initialize_network(x, y, z)
     visualize_network(network)

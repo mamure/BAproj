@@ -54,5 +54,4 @@ def visualize_network(network):
     
 if __name__ == "__main__":
     network = initialize_simple_network()
-    print(hc.shortest_path(network, 0, 3))
     visualize_network(network)

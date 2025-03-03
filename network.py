@@ -3,13 +3,27 @@ import threading
 import random as rnd
 import time
 class Node:
-    def __init__(self, node_id, type):
+    def __init__(self, node_id, type, ip="127.0.0.1", port=None):
+        """_summary_
+
+        Args:
+            node_id (int)
+            type (str)
+            ip (str, optional): Defaults to "127.0.0.1".
+            port (int, optional)
+        """
         self.id = node_id
         self.type = type
         self.neighbors = []
         self.routing_table = {}
         self.load = 0
         self.congest_status = False
+        
+        self.ip = ip
+        self.port = 5000 + node_id
+        self.socket = None
+        self.listening = False
+        self.received_packets = []
         
     def __repr__(self):
         return f"Node(id={self.id}, type={self.device_type})"
@@ -97,13 +111,13 @@ class Node:
             # Reset timeout
             self.socket.settimeout(None)
 class Edge:
-    def __init__(self, edge_id, src, dst, bandwidth, loss_rate, channel = 1):
+    def __init__(self, edge_id, src, dst, bandwidth, loss_rate):
         self.id = edge_id
         self.src = src
         self.dst = dst
         self.bandwidth = bandwidth
         self.loss_rate = loss_rate
-        self.channel = channel
+        self.channel = rnd.randint(1,3)
         self.active = True
         
     def __repr__(self):

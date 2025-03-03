@@ -12,7 +12,6 @@ def shortest_path(graph, start_id, target_id):
 
     while queue:
         current_node, path = queue.popleft()
-        print(f'Current node: {current_node.id}')
         if current_node.id in visited:
             continue
         
@@ -22,7 +21,6 @@ def shortest_path(graph, start_id, target_id):
             return path
         
         for neighbor_id in current_node.neighbors:
-            print(f'Path is: {path}')
             if neighbor_id not in visited:
                 queue.append((graph.nodes[neighbor_id], path + [neighbor_id]))
 

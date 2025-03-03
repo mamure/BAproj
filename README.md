@@ -39,7 +39,9 @@ I've also been thinking about how "realistic" the testing should be, for example
 
 Lastly, I've been writing more concurrently alongside the implementation.
 ## Week 4 (24 feb-2 mar)
-Found a library pyvis that has a nice graph visualiser, that I can use for confirming network topology.
+I found a library called Pyvis, which has a nice graph visualizer that I can use to confirm network topology.
+The theoretical part of WCETT is implemented, but the actual testing and routing table computation are still missing.
+I have implemented socket and packet listening in the nodes.
 ## Week 5 (3-9 mar)
 ## Week 6 (10-16 mar)
 ## Week 7 (17-23 mar)

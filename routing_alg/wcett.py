@@ -13,7 +13,7 @@ def compute_wcett(edges, packet_sz, beta = 0.5):
         ett_sum += ett_var
         
         channel = edge.channel
-        max_ett_channel[channel] = max(max_ett_channel.get(channel, 1), ett_var)
+        max_ett_channel[channel] = max_ett_channel.get(channel, 0) + ett_var
         
     max_channel_ett = max(max_ett_channel.values())
     

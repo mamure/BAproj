@@ -1,7 +1,7 @@
 import network as nt
 from pyvis.network import Network as pyNT
 import os
-import routing.hop_count as hc
+import routing
 
 def initialize_simple_network():
     """
@@ -26,7 +26,7 @@ def initialize_simple_network():
     network.add_edge(ap1, ap2, 1, 0.5)
     network.add_edge(ap2, c, 1, 0.5)
     
-    return network
+    return network, igw, c
 
 def visualize_network(network):
     net = pyNT(height='750px', width='100%', bgcolor='#272A32', font_color='white')
@@ -53,5 +53,6 @@ def visualize_network(network):
     print(f"Network graph saved at '{output_path}'. Open it in your browser to view.")
     
 if __name__ == "__main__":
-    network = initialize_simple_network()
+    network, igw, c = initialize_simple_network()
+    test = routing.WCETTRouting()
     visualize_network(network)

@@ -1,15 +1,12 @@
-import sys
-import os
-# Add the parent directory to sys.path
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from routing_alg import hop_count as hc
+from routing_alg import wcett
+# from routing_alg import wcett_lb
 
-import routing.hop_count as hp
-import routing.wcett as wcett
-import network as nt
-
-def find_all_paths(nw, src, dest, max_depth=10):
-    path = [src]
-    visited = set([src])
+def find_all_paths(nw, src, dest, path=None, visited=None, max_depth=10):
+    if path is None:
+        path = [src]
+    if visited is None:
+        visited = set([src])
         
     if src == dest:
         return [path]
@@ -45,7 +42,7 @@ class RoutingProtocol:
 
 class HopCountRouting(RoutingProtocol):
     def compute_routing_tb(self, nw, src, dest):        
-        routing_tb = hp.shortest_path(nw, src, dest)
+        routing_tb = hc.shortest_path(nw, src, dest)
         return routing_tb
     
 class WCETTRouting(RoutingProtocol):
@@ -72,3 +69,10 @@ class WCETTRouting(RoutingProtocol):
         
         best_path = min(weights, key=weights.get)
         return list(best_path)
+    
+# class WCETT_LBRouting(RoutingProtocol):
+#     def __init__(self):
+#         super().__init__()
+    
+#     def compute_routing_tb(self, nw, src, dest):
+#         return super().compute_routing_tb(nw, src, dest)

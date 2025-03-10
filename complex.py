@@ -1,7 +1,6 @@
 import random as rnd
 import network as nt
-from pyvis.network import Network as pyNT
-import os
+import visualiser as vis
 
 def initialize_network(x, y, z):
     """
@@ -28,10 +27,10 @@ def initialize_network(x, y, z):
     clients = [network.create_node("C") for _ in range(z)]
 
     for igw in igws:
-        num_connections = max(1, y // x)
+        num_connections = 3
         connected_routers = rnd.sample(routers, num_connections)
         for router in connected_routers:
-            network.add_edge(igw, router, rnd.uniform(20,100), rnd.uniform(0.1,0.9))
+            network.add_edge(igw, router, rnd.uniform(30,100), rnd.uniform(0.1,0.9))
 
     for i in range(len(routers)):
         for j in range(i + 1, len(routers)):
@@ -39,44 +38,17 @@ def initialize_network(x, y, z):
                 network.add_edge(routers[i], routers[j], rnd.uniform(20, 100), rnd.uniform(0.1,0.9))
 
     for client in clients:
-        num_connections = rnd.randint(1, min(4, len(routers)))  # Each client connects to 1-4 routers
+        num_connections = rnd.randint(1, min(3, len(routers)))  # Each client connects to 1-3 routers
         connected_routers = rnd.sample(routers, num_connections)
         for router in connected_routers:
             network.add_edge(client, router, rnd.uniform(10, 80), rnd.uniform(0.1,0.9))
 
     return network
-
-def visualize_network(network):
-    net = pyNT(height='750px', width='100%', bgcolor='#272A32', font_color='white')
-
-    # Define colors for node types
-    node_colors = {
-        "IGW": "red",
-        "AP": "blue",
-        "C": "green"
-    }
-    
-    for node_id, node in network.nodes.items():
-        color = node_colors.get(node.type)
-        net.add_node(node_id, label=f"Node {node_id}", title=f"Type: {node.type}", color=color)
-
-    # Add edges
-    for edge_id, edge in network.edges.items():
-        net.add_edge(edge.src.id, edge.dst.id, title=f"Bandwidth: {edge.bandwidth:.2f} Mbps, Loss Rate: {edge.loss_rate:.2f}")
-    
-    # Ensure output directory exists
-    output_dir = "html_vis"
-    os.makedirs(output_dir, exist_ok=True)
-    
-    # Save the visualization
-    output_path = os.path.join(output_dir, "complex_graph.html")
-    net.write_html(output_path)
-    print(f"Network graph saved at '{output_path}'. Open it in your browser to view.")
     
 if __name__ == "__main__":
     x = 1  # Number of IGWs
-    y = 5  # Number of Routers
-    z = 30 # Number of Clients
+    y = 6  # Number of Routers
+    z = 20 # Number of Clients
 
     network = initialize_network(x, y, z)
-    visualize_network(network)
+    vis.visualize_network(network)

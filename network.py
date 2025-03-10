@@ -2,10 +2,33 @@ import socket
 import threading
 import random as rnd
 import time
+from packet import Packet
+
+NODE_ID_COUNTER = 0
+EDGE_ID_COUNTER = 0
+PACKET_ID_COUNTER = 0
+
+def node_id_manager():
+    global NODE_ID_COUNTER
+    current = NODE_ID_COUNTER
+    NODE_ID_COUNTER += 1
+    return current
+
+def edge_id_manager():
+    global EDGE_ID_COUNTER
+    current = EDGE_ID_COUNTER
+    EDGE_ID_COUNTER += 1
+    return current
+
+def packet_id_manager():
+    global PACKET_ID_COUNTER
+    current = PACKET_ID_COUNTER
+    PACKET_ID_COUNTER += 1
+    return current
+
 class Node:
     def __init__(self, node_id, type, ip="127.0.0.1", port=None):
-        """_summary_
-
+        """
         Args:
             node_id (int)
             type (str)
@@ -26,8 +49,8 @@ class Node:
         self.received_packets = []
         
     def __repr__(self):
-        return f"Node(id={self.id}, type={self.device_type})"
-    
+        return f"Node(id={self.id}, type={self.type})"
+
     def start_listening(self):
         if self.listening:
             return
@@ -59,39 +82,37 @@ class Node:
                     print(f'Error on node {self.id}: {e}')
                     
     def send_ack(self, packet, addr):
-        ack_packet = {
-            'type': 'ACK',
-            'src': self.id,
-            'dest': packet.get('src')
-        }
+        packet_id = packet_id_manager()
+        ack_packet = Packet(
+            packet_id,
+            packet.dest.id,
+            packet.src.id,
+            packet_type="ACK"
+        )
         try:
             self.socket.sendto(ack_packet, addr)
         except Exception as e:
             print(f'Error sending ACK from node {self.id}: {e}')
             
-    def send_packet(self, dst, payload, edge):
+    def send_packet(self, dest, edge):
         if not self.socket:
             self.start_listening()
-            
-        packet_id = rnd.randint(0,9999)
-        packet = {
-            'id': packet_id,
-            'src': self.id,
-            'dst': dst.id,
-            'payload': payload,
-            'type': 'DATA',
-            'time': time.time()
-        }
+        
+        packet_id = packet_id_manager()
+        packet = Packet(
+            packet_id,
+            src=self.id,
+            dest=dest,
+            size=1024
+        )
         
         loss_rate = edge.loss_rate
         if rnd.random() < loss_rate:
-            print(f"Simulated packet loss: Node {self.id} -> Node {dst.id}")
+            print(f"Simulated packet loss: Node {self.id} -> Node {dest.id}")
             return {'success': False, 'reason': 'packet_loss'}
-        
         try:
-            self.socket.sendto(packet, (dst.ip, dst.port))
+            self.socket.sendto(packet, (dest.ip, dest.port))
             self.socket.settimeout(0.5) # half a second timeout
-            
             try:
                 ack_data = self.socket.recvfrom(4096)
                 if ack_data.get('type') == 'ACK':
@@ -132,7 +153,7 @@ class Edge:
         time.sleep(trans_time)
         return trans_time
     
-    def send_pck(self, src, dst, payload):
+    def send_pck(self, src, dst):
         if src.id != self.src.id and src.id != self.dst.id:
             raise ValueError(f"Node {src.id} is not connected to this edge")
         
@@ -141,7 +162,7 @@ class Edge:
         
         self.transmit_pck()
         
-        result = src.send_packet(dst, payload, edge=self)
+        result = src.send_packet(dst, edge=self)
         self.packets_sent += 1
         if not result['success']:
             self.packets_lost += 1
@@ -149,22 +170,18 @@ class Edge:
     
 class Graph:
     def __init__(self):
-        self.node_id_counter = 0
-        self.edge_id_counter = 0
         self.nodes = {}
         self.edges = {}
         
     def create_node(self, type, ip="127.0.0.1", port=None):
-        node = Node(self.node_id_counter, type, ip, port)
-        self.nodes[self.node_id_counter] = node
-        self.node_id_counter += 1
+        node = Node(node_id_manager(), type, ip, port)
+        self.nodes[node.id] = node
         return node
     
     def add_edge(self, node_a, node_b, bandwidth, loss_rate):
         if node_b.id not in node_a.neighbors:
-            edge = Edge(self.edge_id_counter, node_a, node_b, bandwidth, loss_rate)
-            self.edges[self.edge_id_counter] = edge
-            self.edge_id_counter += 1
+            edge = Edge(edge_id_manager(), node_a, node_b, bandwidth, loss_rate)
+            self.edges[edge.id] = edge
             node_a.neighbors.append(node_b.id)
             node_b.neighbors.append(node_a.id)
             return edge
@@ -183,7 +200,7 @@ class Graph:
                 return edge
         return None
     
-    def send_pck_nodes(self, src_id, dst_id, payload):
+    def send_packet(self, src_id, dst_id):
         if src_id not in self.nodes or dst_id not in self.nodes:
             return {'success': False, 'reason': 'invalid_node_id'}
         
@@ -192,4 +209,4 @@ class Graph:
         edge = self.get_edge_between_nodes(src, dst)
         if not edge:
             return {'success': False, 'reason': 'nodes_not_connected'}
-        return edge.send_pck(src, dst, payload)
+        return edge.send_pck(src, dst)

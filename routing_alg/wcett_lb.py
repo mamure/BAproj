@@ -13,3 +13,7 @@
 #     congest_status = True # congested
 # else:
 #     congest_status = False # "balanced"
+
+def compute_wcett_lb():
+    wcett_lb = {}
+    return wcett_lb

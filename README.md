@@ -43,6 +43,20 @@ I found a library called Pyvis, which has a nice graph visualizer that I can use
 The theoretical part of WCETT is implemented, but the actual testing and routing table computation are still missing.
 I have implemented socket and packet listening in the nodes.
 ## Week 5 (3-9 mar)
+It’s quite similar to last week. I’ve made more progress with testing and simulation, but some parts are still incomplete.
+
+The current progress is:
+* The basic network structure is complete.
+* Hop Count routing tables are successfully created.
+* The simulation framework runs but doesn’t process packets correctly.
+
+For my own TODO: Before I start on WCETT-LB, I still need to:
+* Reduce the packet sending rate.
+* Fix routing table computations for WCETT and debug.
+* Simulate traffic over x seconds.
+* Debug the packet delivery issue.
+* Complete the WCETT implementation.
+* Write more on WCETT in the report.
 ## Week 6 (10-16 mar)
 ## Week 7 (17-23 mar)
 ## Week 8 (24-30 mar)

@@ -1,23 +1,57 @@
-from complex import initialize_network
+from complex_network import initialize_network
 import routing
 import logging
 import time
+import random as rnd
 
 class MeshNetworkSimulator:
     def __init__(self):
-        self.network = initialize_network(x,y,z)
+        self.network = initialize_network()
         
-    def simulate_traffic(self, duration=10):
+    def simulate_traffic(self, duration=20):
         self.network.start_network()
+        time.sleep(4)
         
         total_packets = 0
-        packets_send = 0
+        packets_sent = 0
         
         start_time = time.time()
+        
+        c_nodes = [node_id for node_id, node in self.network.nodes.items() 
+            if node.type == "C"]
+        igw_nodes = [node_id for node_id, node in self.network.nodes.items() 
+            if node.type == "IGW"]
     
         try:
             while time.time() - start_time < duration:
-                self.network.send_packet(1,1)
+                src_id = rnd.choice(c_nodes)
+                dst_id = rnd.choice(igw_nodes)
+                total_packets += 1
+                
+                src_node = self.network.nodes[src_id]
+                route = src_node.routing_table.get(dst_id)
+                if not route:
+                    logging.error(f"No route found from node {src_id} to IGW {dst_id}")
+                    continue
+                
+                route_success = True
+                
+                for i in range(len(route) - 1):
+                    result = self.network.send_packet(route[i], route[i+1])
+                    if not result.get("success"):
+                        logging.error(f"Packet transmission failed between node {route[i]} and node {route[i+1]}: Reason - {result.get('reason', 'unknown')}")
+                        route_success = False
+                        break
+                    
+                if route_success:
+                    packets_sent += 1
+                    logging.info(f"Packet from {src_id} to {dst_id} result: {result}")
+                
+                time.sleep(0.005)
+                # progess every 100 packets
+                if total_packets % 100 == 0:
+                    elapsed = time.time() - start_time
+                    print(f"Progress: {total_packets} packets, {elapsed:.1f}s elapsed")
         except KeyboardInterrupt:
             print("Simulation interrupted")
         finally:
@@ -26,8 +60,8 @@ class MeshNetworkSimulator:
             print("\n=== Simulation Results ===")
             print(f'Duration: {elapsed:.1f} seconds')
             print(f'Total packets: {total_packets}')
-            print(f'Successful packets: {packets_send}')
-            print(f'Error rate: {(total_packets - packets_send / total_packets)*100:.1f}%')
+            print(f'Successful packets: {packets_sent}')
+            print(f'Error rate: {((total_packets - packets_sent) / total_packets)*100:.1f}%')
     
     def hop_count_sim(self):
         """
@@ -67,9 +101,12 @@ class MeshNetworkSimulator:
                     node.routing_table[igw_id] = next_hop
         
         logging.info(f"WCETT routing tables created for {len(self.network.nodes)} nodes")
+        logging.info("Routing tables before simulation:")
+        for node_id, node in self.network.nodes.items():
+            logging.info(f"Node {node_id} routing table: {node.routing_table}")
         return True
 
-def main(x, y, z):
+def main():
     """
     Args:
         x (int): Number of IGWs.
@@ -112,7 +149,4 @@ def main(x, y, z):
             print("Invalid choice. Please enter 1, 2, or 3.")
 
 if __name__ == "__main__":
-    x = 1  # Number of IGWs
-    y = 6  # Number of Routers
-    z = 20 # Number of Clients
-    main(x, y, z)
+    main()

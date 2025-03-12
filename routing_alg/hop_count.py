@@ -2,9 +2,11 @@ from collections import deque
 
 def shortest_path(graph, start_id, target_id):
     if start_id == target_id:
-        return None
+        return []
     
     start_node = graph.nodes[start_id]
+    if target_id not in graph.nodes:
+        return []
     target_node = graph.nodes[target_id]
     
     visited = set()

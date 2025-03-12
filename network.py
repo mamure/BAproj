@@ -3,6 +3,7 @@ import threading
 import random as rnd
 import time
 from packet import Packet
+import pickle as pkl
 
 NODE_ID_COUNTER = 0
 EDGE_ID_COUNTER = 0
@@ -71,11 +72,12 @@ class Node:
     def listen_for_packets(self):
         while self.listening:
             try:
-                packet, addr = self.socket.recvfrom(4096)
+                data, addr = self.socket.recvfrom(4096)
+                packet = pkl.loads(data)
                 
                 self.received_packets.append(packet)
                 
-                if packet.get('type') == 'DATA':
+                if packet.type == 'DATA':
                     self.send_ack(packet, addr)
             except Exception as e:
                 if self.listening:
@@ -85,52 +87,56 @@ class Node:
         packet_id = packet_id_manager()
         ack_packet = Packet(
             packet_id,
-            packet.dest.id,
-            packet.src.id,
+            src_id=packet.dest_id,
+            dest_id=packet.src_id,
+            size=64,
             packet_type="ACK"
         )
         try:
-            self.socket.sendto(ack_packet, addr)
+            ack_data = pkl.dumps(ack_packet)
+            self.socket.sendto(ack_data, addr)
         except Exception as e:
             print(f'Error sending ACK from node {self.id}: {e}')
             
     def send_packet(self, dest, edge):
         if not self.socket:
             self.start_listening()
+            time.sleep(0.1)
         
         packet_id = packet_id_manager()
         packet = Packet(
             packet_id,
-            src=self.id,
-            dest=dest,
+            src_id=self.id,
+            dest_id=dest.id,
             size=1024
         )
         
         loss_rate = edge.loss_rate
         if rnd.random() < loss_rate:
-            print(f"Simulated packet loss: Node {self.id} -> Node {dest.id}")
             return {'success': False, 'reason': 'packet_loss'}
-        try:
-            self.socket.sendto(packet, (dest.ip, dest.port))
-            self.socket.settimeout(0.5) # half a second timeout
-            try:
-                ack_data = self.socket.recvfrom(4096)
-                if ack_data.get('type') == 'ACK':
-                    print(f'ACK received for packet {packet_id}')
-                    return {'success': True, 'ack': ack_data}
-                else:
-                    return {'success': False, 'reason': 'invalid_ack'}
-            
-            except socket.timeout:
-                print(f'ACK timeout for packet {packet_id}')
-                return {'success': False, 'reason': 'timeout'}
         
-        except Exception as e:
-            print(f'Error sending from node {self.id}: {e}')
-            return {'success': False, 'reason': str(e)}
-        finally:
-            # Reset timeout
-            self.socket.settimeout(None)
+        max_tries = 3
+        retry = 0
+        while retry < max_tries:
+            try:
+                packet_data = pkl.dumps(packet)
+                self.socket.sendto(packet_data, (dest.ip, dest.port))
+                self.socket.settimeout(0.5) # half a second timeout
+                try:
+                    ack_data, addr = self.socket.recvfrom(4096)
+                    ack = pkl.loads(ack_data)
+                    if ack.type == 'ACK':
+                        return {'success': True, 'ack': ack_data}
+                    else:
+                        return {'success': False, 'reason': 'invalid_ack'}
+
+                except socket.timeout:
+                    print(f'ACK timeout for packet {packet_id}')
+                    retry += 1
+                    continue
+            except Exception as e:
+                return {'success': False, 'reason': str(e)}
+        return {'success': False, 'reason': 'timeout'}
 class Edge:
     def __init__(self, edge_id, src, dst, bandwidth, loss_rate):
         self.id = edge_id
@@ -142,7 +148,7 @@ class Edge:
         self.active = True
         
     def __repr__(self):
-        return f"Edge({self.node_a.id} <-> {self.node_b.id})"
+        return f"Edge({self.src.id} <-> {self.dst.id})"
     
     def transmit_pck(self, packet_sz=1024):
         if not self.active:
@@ -163,9 +169,6 @@ class Edge:
         self.transmit_pck()
         
         result = src.send_packet(dst, edge=self)
-        self.packets_sent += 1
-        if not result['success']:
-            self.packets_lost += 1
         return result
     
 class Graph:
@@ -206,7 +209,16 @@ class Graph:
         
         src = self.nodes[src_id]
         dst = self.nodes[dst_id]
-        edge = self.get_edge_between_nodes(src, dst)
+        
+        if not src.listening:
+            src.start_listening()
+            time.sleep(0.1)
+    
+        if not dst.listening:
+            dst.start_listening()
+            time.sleep(0.1)
+        
+        edge = self.get_edge_between_nodes(src.id, dst.id)
         if not edge:
             return {'success': False, 'reason': 'nodes_not_connected'}
         return edge.send_pck(src, dst)

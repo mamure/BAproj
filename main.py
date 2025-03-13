@@ -101,9 +101,6 @@ class MeshNetworkSimulator:
                     node.routing_table[igw_id] = next_hop
         
         logging.info(f"WCETT routing tables created for {len(self.network.nodes)} nodes")
-        logging.info("Routing tables before simulation:")
-        for node_id, node in self.network.nodes.items():
-            logging.info(f"Node {node_id} routing table: {node.routing_table}")
         return True
 
 def main():

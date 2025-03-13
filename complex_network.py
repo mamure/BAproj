@@ -1,5 +1,6 @@
 import network as nt
 import visualiser as vis
+import random as rnd
 
 def initialize_network():
     """
@@ -36,34 +37,34 @@ def initialize_network():
     c14 = network.create_node("C")
     c15 = network.create_node("C")
     
-    network.add_edge(igw, mr1, 1, 0)
-    network.add_edge(igw, mr2, 1, 0)
-    network.add_edge(igw, mr3, 1, 0)
+    network.add_edge(igw, mr1, 1, rnd.uniform(0.1,0.9))
+    network.add_edge(igw, mr2, 1, rnd.uniform(0.1,0.9))
+    network.add_edge(igw, mr3, 1, rnd.uniform(0.1,0.9))
     
-    network.add_edge(mr1, mr4, 1, 0)
-    network.add_edge(mr1, mr6, 1, 0)
-    network.add_edge(mr2, mr4, 1, 0)
-    network.add_edge(mr2, mr5, 1, 0)
-    network.add_edge(mr3, mr5, 1, 0)
+    network.add_edge(mr1, mr4, 1, rnd.uniform(0.1,0.9))
+    network.add_edge(mr1, mr6, 1, rnd.uniform(0.1,0.9))
+    network.add_edge(mr2, mr4, 1, rnd.uniform(0.1,0.9))
+    network.add_edge(mr2, mr5, 1, rnd.uniform(0.1,0.9))
+    network.add_edge(mr3, mr5, 1, rnd.uniform(0.1,0.9))
     
-    network.add_edge(c7, mr5, 1, 0)
-    network.add_edge(c7, mr6, 1, 0)
-    network.add_edge(c8, mr3, 1, 0)
-    network.add_edge(c8, mr5, 1, 0)
-    network.add_edge(c9, mr3, 1, 0)
-    network.add_edge(c10, mr2, 1, 0)
-    network.add_edge(c10, mr3, 1, 0)
-    network.add_edge(c10, mr5, 1, 0)
-    network.add_edge(c11, mr4, 1, 0)
-    network.add_edge(c11, mr6, 1, 0)
-    network.add_edge(c12, mr1, 1, 0)
-    network.add_edge(c12, mr2, 1, 0)
-    network.add_edge(c13, mr6, 1, 0)
-    network.add_edge(c14, mr2, 1, 0)
-    network.add_edge(c14, mr4, 1, 0)
-    network.add_edge(c14, mr5, 1, 0)
-    network.add_edge(c15, mr4, 1, 0)
-    network.add_edge(c15, mr5, 1, 0)
+    network.add_edge(c7, mr5, 1, rnd.uniform(0.1,0.9))
+    network.add_edge(c7, mr6, 1, rnd.uniform(0.1,0.9))
+    network.add_edge(c8, mr3, 1, rnd.uniform(0.1,0.9))
+    network.add_edge(c8, mr5, 1, rnd.uniform(0.1,0.9))
+    network.add_edge(c9, mr3, 1, rnd.uniform(0.1,0.9))
+    network.add_edge(c10, mr2, 1, rnd.uniform(0.1,0.9))
+    network.add_edge(c10, mr3, 1, rnd.uniform(0.1,0.9))
+    network.add_edge(c10, mr5, 1, rnd.uniform(0.1,0.9))
+    network.add_edge(c11, mr4, 1, rnd.uniform(0.1,0.9))
+    network.add_edge(c11, mr6, 1, rnd.uniform(0.1,0.9))
+    network.add_edge(c12, mr1, 1, rnd.uniform(0.1,0.9))
+    network.add_edge(c12, mr2, 1, rnd.uniform(0.1,0.9))
+    network.add_edge(c13, mr6, 1, rnd.uniform(0.1,0.9))
+    network.add_edge(c14, mr2, 1, rnd.uniform(0.1,0.9))
+    network.add_edge(c14, mr4, 1, rnd.uniform(0.1,0.9))
+    network.add_edge(c14, mr5, 1, rnd.uniform(0.1,0.9))
+    network.add_edge(c15, mr4, 1, rnd.uniform(0.1,0.9))
+    network.add_edge(c15, mr5, 1, rnd.uniform(0.1,0.9))
 
     return network
     

@@ -52,21 +52,28 @@ class WCETTRouting(RoutingProtocol):
         
     def compute_routing_tb(self, nw, src, dest):
         all_paths = find_all_paths(nw, src, dest)
-        
+
         if not all_paths:
             return None
         
         weights = {}
         for path in all_paths:
+            if len(path) < 2:
+                continue
+
             edges = []
             for i in range(len(path) - 1):
                 edge = nw.get_edge_between_nodes(path[i], path[i+1])
                 if edge:
                     edges.append(edge)
                     
-            wcett_var = wcett.compute_wcett(edges, self.packet_sz, self.beta)
-            weights[tuple(path)] = wcett_var
-        
+            if edges:
+                wcett_temp = wcett.compute_wcett(edges, self.packet_sz, self.beta)
+                weights[tuple(path)] = wcett_temp
+
+        if not weights:
+            return None
+
         best_path = min(weights, key=weights.get)
         return list(best_path)
     

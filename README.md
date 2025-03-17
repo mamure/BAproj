@@ -51,13 +51,16 @@ The current progress is:
 * The simulation framework runs but doesn’t process packets correctly.
 
 For my own TODO: Before I start on WCETT-LB, I still need to:
-* Reduce the packet sending rate.
+* ~~Reduce the packet sending rate.~~
 * Fix routing table computations for WCETT and debug.
-* Simulate traffic over x seconds.
-* Debug the packet delivery issue.
-* Complete the WCETT implementation.
+* ~~Simulate traffic over x seconds.~~
+* ~~Debug the packet delivery issue.~~
+* ~~Complete the WCETT implementation.~~
 * Write more on WCETT in the report.
 ## Week 6 (10-16 mar)
+I’ve fixed some issues with the simulation, making the “complex, non-random network” functional, though it still needs testing to verify packet routing behavior. I’m currently working on determining whether packets follow the expected paths through the network. The feedback on your report has been helpful in guiding the level of detail and explanation. This week, I will focus more on writing than coding to follow up.
+
+I still need to fix the routing table computations for WCETT and continue testing to confirm the packet routing paths.
 ## Week 7 (17-23 mar)
 ## Week 8 (24-30 mar)
 ## Week 9 (31 mar-6 apr)

@@ -98,7 +98,7 @@ class Node:
         except Exception as e:
             print(f'Error sending ACK from node {self.id}: {e}')
             
-    def send_packet(self, dest, edge):
+    def send_packet_node(self, dest, edge):
         if not self.socket:
             self.start_listening()
             time.sleep(0.1)
@@ -150,7 +150,7 @@ class Edge:
     def __repr__(self):
         return f"Edge({self.src.id} <-> {self.dst.id})"
     
-    def transmit_pck(self, packet_sz=1024):
+    def transmit_packet(self, packet_sz=1024):
         if not self.active:
             return None
         
@@ -159,16 +159,16 @@ class Edge:
         time.sleep(trans_time)
         return trans_time
     
-    def send_pck(self, src, dst):
+    def send_packet_edge(self, src, dst):
         if src.id != self.src.id and src.id != self.dst.id:
             raise ValueError(f"Node {src.id} is not connected to this edge")
         
         if dst.id != self.src.id and dst.id != self.dst.id:
             raise ValueError(f"Node {dst.id} is not connected to this edge")
         
-        self.transmit_pck()
+        self.transmit_packet()
         
-        result = src.send_packet(dst, edge=self)
+        result = src.send_packet_node(dst, edge=self)
         return result
     
 class Graph:
@@ -203,7 +203,7 @@ class Graph:
                 return edge
         return None
     
-    def send_packet(self, src_id, dst_id):
+    def send_packet_graph(self, src_id, dst_id):
         if src_id not in self.nodes or dst_id not in self.nodes:
             return {'success': False, 'reason': 'invalid_node_id'}
         

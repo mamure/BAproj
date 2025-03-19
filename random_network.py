@@ -30,18 +30,18 @@ def initialize_network(x, y, z):
         num_connections = 3
         connected_routers = rnd.sample(routers, num_connections)
         for router in connected_routers:
-            network.add_edge(igw, router, rnd.uniform(30,100), rnd.uniform(0.1,0.9))
+            network.add_edge(igw, router, rnd.uniform(30,100), rnd.uniform(0.1,0.5))
 
     for i in range(len(routers)):
         for j in range(i + 1, len(routers)):
             if rnd.random() < 0.5:
-                network.add_edge(routers[i], routers[j], rnd.uniform(20, 100), rnd.uniform(0.1,0.9))
+                network.add_edge(routers[i], routers[j], rnd.uniform(20, 100), rnd.uniform(0.1,0.5))
 
     for client in clients:
         num_connections = rnd.randint(1, min(3, len(routers)))  # Each client connects to 1-3 routers
         connected_routers = rnd.sample(routers, num_connections)
         for router in connected_routers:
-            network.add_edge(client, router, rnd.uniform(10, 80), rnd.uniform(0.1,0.9))
+            network.add_edge(client, router, rnd.uniform(10, 80), rnd.uniform(0.1,0.5))
 
     return network
     

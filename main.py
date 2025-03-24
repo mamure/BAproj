@@ -8,9 +8,8 @@ class MeshNetworkSimulator:
     def __init__(self):
         self.network = initialize_network()
         
-    def simulate_traffic(self, duration=60):
+    def simulate_traffic(self, duration=10):
         self.network.start_network()
-        time.sleep(5)
         
         total_packets = 0
         packets_sent = 0
@@ -25,27 +24,16 @@ class MeshNetworkSimulator:
         try:
             while time.time() - start_time < duration:
                 src_id = rnd.choice(c_nodes)
-                dst_id = rnd.choice(igw_nodes)
+                dest_id = rnd.choice(igw_nodes)
                 total_packets += 1
                 
-                src_node = self.network.nodes[src_id]
-                route = src_node.routing_table.get(dst_id)
-                if not route:
-                    logging.error(f"No route found from node {src_id} to IGW {dst_id}")
-                    continue
+                result = self.network.send_packet_graph(src_id, dest_id)
                 
-                route_success = True
-                
-                for i in range(len(route) - 1):
-                    result = self.network.send_packet_graph(route[i], route[i+1])
-                    if not result.get("success"):
-                        logging.error(f"Packet transmission failed between node {route[i]} and node {route[i+1]}: Reason - {result.get('reason', 'unknown')}")
-                        route_success = False
-                        break
-                    
-                if route_success:
+                if result.get('success'):
                     packets_sent += 1
-                    logging.info(f"Packet from {src_id} to {dst_id} result: {result}")
+                    logging.info(f"Packet from {src_id} to {dest_id} result: {result}")
+                else:
+                    logging.info(f"Packet from {src_id} to {dest_id} result: {result}")
                 # progess every 100 packets
                 if total_packets % 100 == 0:
                     elapsed = time.time() - start_time
@@ -77,6 +65,9 @@ class MeshNetworkSimulator:
                 next_hop = routing.HopCountRouting().compute_routing_tb(self.network, node_id, igw_id)
                 if next_hop is not None:
                     node.routing_table[igw_id] = next_hop
+        
+        for node in self.network.nodes.values():
+            print(f"Node {node.id} Routing Table: {node.routing_table}")
         
         logging.info(f"Hop count routing tables created for {len(self.network.nodes)} nodes")
         return True

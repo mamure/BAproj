@@ -1,16 +1,13 @@
 from collections import deque
 
-def shortest_path(graph, start_id, target_id):
-    if start_id == target_id:
+def shortest_path(graph, src_id, dest_id):
+    src_node = graph.nodes[src_id]
+    if dest_id not in graph.nodes:
         return []
-    
-    start_node = graph.nodes[start_id]
-    if target_id not in graph.nodes:
-        return []
-    target_node = graph.nodes[target_id]
+    target_node = graph.nodes[dest_id]
     
     visited = set()
-    queue = deque([(start_node, [start_node.id])])
+    queue = deque([(src_node, [src_node.id])])
 
     while queue:
         current_node, path = queue.popleft()

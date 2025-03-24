@@ -27,6 +27,12 @@ def packet_id_manager():
     PACKET_ID_COUNTER += 1
     return current
 
+def reset_id_managers():
+    global NODE_ID_COUNTER, EDGE_ID_COUNTER, PACKET_ID_COUNTER
+    NODE_ID_COUNTER = 0
+    EDGE_ID_COUNTER = 0
+    PACKET_ID_COUNTER = 0
+
 class Node:
     def __init__(self, node_id, type, ip="127.0.0.1", port=None):
         """
@@ -54,7 +60,7 @@ class Node:
 
     def start_listening(self):
         if self.listening:
-            return
+            return {'success': False, 'reason': 'timed out'}
         
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.socket.bind((self.ip, self.port))
@@ -81,7 +87,7 @@ class Node:
                     self.send_ack(packet, addr)
             except Exception as e:
                 if self.listening:
-                    print(f'Error on node {self.id}: {e}')
+                    return
                     
     def send_ack(self, packet, addr):
         packet_id = packet_id_manager()
@@ -96,45 +102,53 @@ class Node:
             ack_data = pkl.dumps(ack_packet)
             self.socket.sendto(ack_data, addr)
         except Exception as e:
-            print(f'Error sending ACK from node {self.id}: {e}')
+            return {'success': False, 'reason': 'error'}
             
-    def send_packet_node(self, dest, edge):
+    def send_packet_node(self, dest, edge, send_packet=None):
         if not self.socket:
             self.start_listening()
             time.sleep(0.1)
-        
-        packet_id = packet_id_manager()
-        packet = Packet(
-            packet_id,
-            src_id=self.id,
-            dest_id=dest.id,
-            size=1024
-        )
+            
+        if send_packet is not None:
+            packet = send_packet
+        else:
+            packet_id = packet_id_manager()
+            packet = Packet(
+                packet_id,
+                src_id=self.id,
+                dest_id=dest.id,
+                size=1024
+            )
         
         loss_rate = edge.loss_rate
         if rnd.random() < loss_rate:
+            self.socket.settimeout(1)
             return {'success': False, 'reason': 'packet_loss'}
         
         max_tries = 3
         retry = 0
         while retry < max_tries:
             try:
+                self.socket.setblocking(1)
+                self.socket.settimeout(3)
+                
                 packet_data = pkl.dumps(packet)
                 self.socket.sendto(packet_data, (dest.ip, dest.port))
-                self.socket.settimeout(0.5) # half a second timeout
                 try:
                     ack_data, addr = self.socket.recvfrom(4096)
                     ack = pkl.loads(ack_data)
                     if ack.type == 'ACK':
-                        return {'success': True, 'ack': ack_data}
+                        if not send_packet:
+                            packet.add_hop(dest.id)
+                        return {'success': True}
                     else:
                         return {'success': False, 'reason': 'invalid_ack'}
-
                 except socket.timeout:
-                    print(f'ACK timeout for packet {packet_id}')
                     retry += 1
+                    print(f"Timeout retry {retry}/{max_tries}")
                     continue
             except Exception as e:
+                print(f"Error: {str(e)}")
                 return {'success': False, 'reason': str(e)}
         return {'success': False, 'reason': 'timeout'}
 class Edge:
@@ -150,25 +164,15 @@ class Edge:
     def __repr__(self):
         return f"Edge({self.src.id} <-> {self.dst.id})"
     
-    def transmit_packet(self, packet_sz=1024):
-        if not self.active:
-            return None
-        
-        trans_time = (packet_sz * 8) / (self.bandwidth * 1_000_000)
-        
-        time.sleep(trans_time)
-        return trans_time
-    
-    def send_packet_edge(self, src, dst):
+    def send_packet_edge(self, src, dst, packet=None):
         if src.id != self.src.id and src.id != self.dst.id:
             raise ValueError(f"Node {src.id} is not connected to this edge")
         
         if dst.id != self.src.id and dst.id != self.dst.id:
             raise ValueError(f"Node {dst.id} is not connected to this edge")
         
-        self.transmit_packet()
+        result = src.send_packet_node(dst, edge=self, send_packet=packet)
         
-        result = src.send_packet_node(dst, edge=self)
         return result
     
 class Graph:
@@ -203,22 +207,61 @@ class Graph:
                 return edge
         return None
     
-    def send_packet_graph(self, src_id, dst_id):
-        if src_id not in self.nodes or dst_id not in self.nodes:
+    def send_packet_graph(self, src_id, dest_id, packet=None):
+        if src_id not in self.nodes or dest_id not in self.nodes:
             return {'success': False, 'reason': 'invalid_node_id'}
-        
+
         src = self.nodes[src_id]
-        dst = self.nodes[dst_id]
-        
+        dest = self.nodes[dest_id]
+
+        if packet is None:
+            packet_id = packet_id_manager()
+            packet = Packet(packet_id, src_id, dest_id, 1024)
+
+        if not packet.route_taken or packet.route_taken[-1] != src_id:
+            packet.add_hop(src_id)
+
         if not src.listening:
             src.start_listening()
-            time.sleep(0.1)
-    
-        if not dst.listening:
-            dst.start_listening()
-            time.sleep(0.1)
-        
-        edge = self.get_edge_between_nodes(src.id, dst.id)
-        if not edge:
-            return {'success': False, 'reason': 'nodes_not_connected'}
-        return edge.send_pck(src, dst)
+        if not dest.listening:
+            dest.start_listening()
+
+        current_node = src
+        print(f'current node id: {current_node.id}')
+        print(f'src node id: {dest_id}')
+
+        while current_node.id != dest_id:
+            # Get the routing table entry for the destination
+            route = current_node.routing_table.get(dest_id)
+            if route is None:
+                return {'success': False, 'reason': 'no_route_found'}
+
+            # If the routing table holds a full route (a list), pick the next hop.
+            if isinstance(route, list):
+                try:
+                    idx = route.index(current_node.id)
+                except ValueError:
+                    return {'success': False, 'reason': 'no_route_found'}
+
+                if idx + 1 >= len(route):
+                    return {'success': False, 'reason': 'no_route_found'}
+                next_hop_id = route[idx + 1]
+            else:
+                # Otherwise assume it's the next hop id
+                next_hop_id = route
+
+            # Get the edge between the current node and the next hop
+            edge = self.get_edge_between_nodes(current_node.id, next_hop_id)
+            if not edge:
+                return {'success': False, 'reason': 'nodes_not_connected'}
+
+            # Send the packet along the edge
+            result = edge.send_packet_edge(current_node, self.nodes[next_hop_id], packet)
+            if not result.get('success', False):
+                return result
+
+            packet.add_hop(next_hop_id)
+            current_node = self.nodes[next_hop_id]
+            print(f'current node id: {current_node.id}')
+
+        return {'success': True}

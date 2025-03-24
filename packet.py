@@ -16,6 +16,10 @@ class Packet:
         self.size = size
         self.type = packet_type
         self.time = time.time()
+        self.route_taken = []
+        
+    def add_hop(self, node_id):
+        self.route_taken.append(node_id)
     
     def create_ack(self):
         return Packet(self.dest,self.src, None, "ACK")

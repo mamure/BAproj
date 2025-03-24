@@ -8,11 +8,6 @@ def initialize_simple_network():
     Creates a simple line network.
     The routers are connected in a line-like manner, and clients are attached to the "last" router.
     
-    Args:
-        x (int): Number of IGWs.
-        y (int): Number of APs.
-        z (int): Number of Clients.
-    
     Returns:
         Network: A Network object containing all nodes and edges.
     """

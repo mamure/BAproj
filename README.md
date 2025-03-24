@@ -62,6 +62,11 @@ I’ve fixed some issues with the simulation, making the “complex, non-random 
 
 I still need to fix the routing table computations for WCETT and continue testing to confirm the packet routing paths.
 ## Week 7 (17-23 mar)
+I have tested and confirmed that WCETT works as expected. However, I still need to fix the actual sending. There are issues with following the routing table and the sending process itself.
+
+There are still many packet timeouts and errors that I need to investigate.
+
+In terms of writing, I have addressed the comments.
 ## Week 8 (24-30 mar)
 ## Week 9 (31 mar-6 apr)
 ## Week 10 (7-13 apr)

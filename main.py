@@ -8,9 +8,9 @@ class MeshNetworkSimulator:
     def __init__(self):
         self.network = initialize_network()
         
-    def simulate_traffic(self, duration=20):
+    def simulate_traffic(self, duration=60):
         self.network.start_network()
-        time.sleep(4)
+        time.sleep(5)
         
         total_packets = 0
         packets_sent = 0
@@ -37,7 +37,7 @@ class MeshNetworkSimulator:
                 route_success = True
                 
                 for i in range(len(route) - 1):
-                    result = self.network.send_packet(route[i], route[i+1])
+                    result = self.network.send_packet_graph(route[i], route[i+1])
                     if not result.get("success"):
                         logging.error(f"Packet transmission failed between node {route[i]} and node {route[i+1]}: Reason - {result.get('reason', 'unknown')}")
                         route_success = False
@@ -46,8 +46,6 @@ class MeshNetworkSimulator:
                 if route_success:
                     packets_sent += 1
                     logging.info(f"Packet from {src_id} to {dst_id} result: {result}")
-                
-                time.sleep(0.005)
                 # progess every 100 packets
                 if total_packets % 100 == 0:
                     elapsed = time.time() - start_time
@@ -104,12 +102,6 @@ class MeshNetworkSimulator:
         return True
 
 def main():
-    """
-    Args:
-        x (int): Number of IGWs.
-        y (int): Number of APs.
-        z (int): Number of Clients.
-    """
     logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
     sim = MeshNetworkSimulator()
     

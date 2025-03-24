@@ -41,8 +41,8 @@ class RoutingProtocol:
         raise NotImplementedError()
 
 class HopCountRouting(RoutingProtocol):
-    def compute_routing_tb(self, nw, src, dest):        
-        routing_tb = hc.shortest_path(nw, src, dest)
+    def compute_routing_tb(self, nw, src_id, dest_id):        
+        routing_tb = hc.shortest_path(nw, src_id, dest_id)
         return routing_tb
     
 class WCETTRouting(RoutingProtocol):
@@ -50,8 +50,8 @@ class WCETTRouting(RoutingProtocol):
         self.packet_sz = packet_sz
         self.beta = beta
         
-    def compute_routing_tb(self, nw, src, dest):
-        all_paths = find_all_paths(nw, src, dest)
+    def compute_routing_tb(self, nw, src_id, dest_id):
+        all_paths = find_all_paths(nw, src_id, dest_id)
 
         if not all_paths:
             return None
@@ -75,7 +75,7 @@ class WCETTRouting(RoutingProtocol):
             return None
 
         best_path = min(weights, key=weights.get)
-        return list(best_path)
+        return best_path
     
 # class WCETT_LBRouting(RoutingProtocol):
 #     def __init__(self):

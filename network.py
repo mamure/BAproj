@@ -202,5 +202,5 @@ class Graph:
                     return send_result
             else:
                 return {'success': False, 'reason': 'max_tries'}
-        
+        print(f"packet {packet.id} route: {packet.route_taken}")
         return {'success': True, 'packet': packet}

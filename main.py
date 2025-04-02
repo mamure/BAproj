@@ -8,7 +8,7 @@ class MeshNetworkSimulator:
     def __init__(self):
         self.network = initialize_network()
         
-    def simulate_traffic(self, duration=10):
+    def simulate_traffic(self, duration=10, load=5):
         self.network.start_network()
         
         total_packets = 0
@@ -34,20 +34,27 @@ class MeshNetworkSimulator:
                     logging.info(f"Packet from {src_id} to {dest_id} result: {result}")
                 else:
                     logging.info(f"Packet from {src_id} to {dest_id} result: {result}")
-                # progess every 100 packets
-                if total_packets % 100 == 0:
+                # progess every 1000 packets
+                if total_packets % 1000 == 0:
                     elapsed = time.time() - start_time
                     print(f"Progress: {total_packets} packets, {elapsed:.1f}s elapsed")
+                time.sleep(1 / load)
         except KeyboardInterrupt:
             print("Simulation interrupted")
         finally:
             self.network.stop_network()
             elapsed = time.time() - start_time
+            throughput = packets_sent / elapsed
+            error_rate = ((total_packets - packets_sent) / total_packets)*100
+            
             print("\n=== Simulation Results ===")
             print(f'Duration: {elapsed:.1f} seconds')
             print(f'Total packets: {total_packets}')
             print(f'Successful packets: {packets_sent}')
-            print(f'Error rate: {((total_packets - packets_sent) / total_packets)*100:.1f}%')
+            print(f'Measured throughput: {throughput:.1f} pkts/sec')
+            print(f'Error rate: {error_rate:.1f}%')
+            
+            return error_rate
     
     def hop_count_sim(self):
         """
@@ -65,9 +72,6 @@ class MeshNetworkSimulator:
                 next_hop = routing.HopCountRouting().compute_routing_tb(self.network, node_id, igw_id)
                 if next_hop is not None:
                     node.routing_table[igw_id] = next_hop
-        
-        for node in self.network.nodes.values():
-            print(f"Node {node.id} Routing Table: {node.routing_table}")
         
         logging.info(f"Hop count routing tables created for {len(self.network.nodes)} nodes")
         return True
@@ -90,6 +94,26 @@ class MeshNetworkSimulator:
                     node.routing_table[igw_id] = next_hop
         
         logging.info(f"WCETT routing tables created for {len(self.network.nodes)} nodes")
+        return True
+    
+    def wcett_lb_sim(self):
+        """
+        Define all routing tables using WCETT-LB metric algorithm. 
+        The destination should be the IGW nodes' id.
+        """
+        igw_nodes = [node_id for node_id, node in self.network.nodes.items() 
+                if node.type == "IGW"]
+        if not igw_nodes: 
+            logging.error("NO IGW in network")
+            return False
+        
+        for node_id, node in self.network.nodes.items():
+            for igw_id in igw_nodes:
+                next_hop = routing.WCETT_LBRouting().compute_routing_tb(self.network, node_id, igw_id)
+                if next_hop is not None:
+                    node.routing_table[igw_id] = next_hop
+        
+        logging.info(f"WCETT-LB routing tables created for {len(self.network.nodes)} nodes")
         return True
 
 def main():
@@ -120,7 +144,10 @@ def main():
                 print("Failed")
             break
         elif choice == "3":
-            # Run simulation with WCETT-LB from routing (not implemented yet)
+            if sim.wcett_lb_sim():
+                sim.simulate_traffic()
+            else:
+                print("Failed")
             break
         elif choice == "4":
             print("Exiting...")

@@ -3,6 +3,7 @@ import random as rnd
 import time
 import queue
 from packet import Packet
+from routing_alg.wcett_lb import update_congest_status
 
 NODE_ID_COUNTER = 0
 EDGE_ID_COUNTER = 0
@@ -33,11 +34,12 @@ def reset_id_managers():
     PACKET_ID_COUNTER = 0
 
 class Node:
-    def __init__(self, node_id, type):
+    def __init__(self, node_id, type, network):
         """
         Args:
             node_id (int)
             type (str)
+            network (network)
         """
         self.id = node_id
         self.type = type
@@ -45,10 +47,12 @@ class Node:
         self.routing_table = {}
         self.load = 0
         self.congest_status = False
-        self.queue = queue.Queue()
+        self.queue = queue.Queue(maxsize=20)
         self.received_packets = []
         self.sent_packets = {}
+        self.dropped_packets = []
         self.running = False
+        self.network = network
         
     def __repr__(self):
         return f"Node(id={self.id}, type={self.type})"
@@ -63,11 +67,27 @@ class Node:
         self.thread = threading.Thread(target=self.process_packets)
         self.thread.daemon = True
         self.thread.start()
+        
+        self.congest_thread = threading.Thread(target=self.monitor_congestion)
+        self.congest_thread.daemon = True
+        self.congest_thread.start()
+        
         return {'success': True}
     
     def stop_running(self):
         self.running = False
         self.thread.join()
+        self.congest_thread.join()
+    
+    def monitor_congestion(self):
+        while self.running:
+            try:
+                update_congest_status(self, self.network)
+                self.load = self.queue.qsize()
+                time.sleep(1)
+            except Exception as e:
+                if self.running:
+                    print(f"Error monitoring congestion at Node {self.id}: {e}")
         
     def process_packets(self):
         while self.running:
@@ -94,7 +114,24 @@ class Node:
         src.queue.put({'packet': ack, 'sender': self})
         
     def receive_message(self, packet, src):
-        self.queue.put({'packet': packet, 'sender': src})
+        try:
+            print(f'Node {self.id} queue size: {self.queue.qsize()}')
+            if self.queue.qsize() >= 20:
+                self.dropped_packets.append({
+                    'packet_id': packet.id,
+                    'src': packet.src_id,
+                    'dest': packet.dest_id,
+                    'time': time.time(),
+                    'reason': 'buffer_full'
+                })
+                print(f'packet dropped')
+                return False
+            else:
+                self.queue.put({'packet': packet, 'sender': src})
+                return True
+        except Exception as e:
+            print(f"Error receiving message at Node {self.id}: {e}")
+            return False
     
 class Edge:
     def __init__(self, edge_id, src, dest, bandwidth, loss_rate):
@@ -132,7 +169,7 @@ class Graph:
         self.edges = {}
         
     def create_node(self, type):
-        node = Node(node_id_manager(), type)
+        node = Node(node_id_manager(), type, network=self)
         self.nodes[node.id] = node
         return node
     
@@ -202,5 +239,4 @@ class Graph:
                     return send_result
             else:
                 return {'success': False, 'reason': 'max_tries'}
-        print(f"packet {packet.id} route: {packet.route_taken}")
         return {'success': True, 'packet': packet}

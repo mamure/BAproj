@@ -68,6 +68,11 @@ There are still many packet timeouts and errors that I need to investigate.
 
 In terms of writing, I have addressed the comments.
 ## Week 8 (24-30 mar)
+I have fixed the routing, so the simulation now runs successfully. However, I still need to implement packet drops when a node’s buffer becomes overrun. Additionally, I have started working on WCETT-LB.
+
+I have also looked into research on hop count but haven’t found anything directly relevant to my work so far. Nevertheless, I will continue searching for useful insights.
+
+Lastly, I have started considering which results I want to produce. I plan to assess the different routing algorithms based on error rate while varying the number of packets per second sent from the clients. 
 ## Week 9 (31 mar-6 apr)
 ## Week 10 (7-13 apr)
 ## Week 11 (14-20 apr)

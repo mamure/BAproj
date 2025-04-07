@@ -8,7 +8,16 @@ class MeshNetworkSimulator:
     def __init__(self):
         self.network = initialize_network()
         
-    def simulate_traffic(self, duration=10, load=5):
+    def simulate_traffic(self, duration=30, load=50):
+        """_summary_
+
+        Args:
+            duration (int, optional): Duration of simulation in seconds. Defaults to 30.
+            load (int, optional): packets per second. Defaults to 50.
+
+        Returns:
+            float: error rate in the simulation
+        """
         self.network.start_network()
         
         total_packets = 0
@@ -31,7 +40,7 @@ class MeshNetworkSimulator:
                 
                 if result.get('success'):
                     packets_sent += 1
-                    logging.info(f"Packet from {src_id} to {dest_id} result: {result}")
+                    logging.info(f"Packet from {src_id} to {dest_id}, result: {result}")
                 else:
                     logging.info(f"Packet from {src_id} to {dest_id} result: {result}")
                 # progess every 1000 packets

@@ -74,6 +74,9 @@ I have also looked into research on hop count but haven’t found anything direc
 
 Lastly, I have started considering which results I want to produce. I plan to assess the different routing algorithms based on error rate while varying the number of packets per second sent from the clients. 
 ## Week 9 (31 mar-6 apr)
+Focused this week on writing, including both design considerations and architecture, as well as a bit on routing algorithms.
+
+The WCETT-LB implementation is almost complete, but there are still some missing features, such as dropping packets when the buffer or queue is full. I also need to write the section about WCETT-LB.
 ## Week 10 (7-13 apr)
 ## Week 11 (14-20 apr)
 ## Week 12 (21-27 apr)

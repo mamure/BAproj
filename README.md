@@ -78,6 +78,9 @@ Focused this week on writing, including both design considerations and architect
 
 The WCETT-LB implementation is almost complete, but there are still some missing features, such as dropping packets when the buffer or queue is full. I also need to write the section about WCETT-LB.
 ## Week 10 (7-13 apr)
+TODO:
+testing throughput in network, how long it takes to read/write message
+Test what can the network do with hardware, like more nodes and such
 ## Week 11 (14-20 apr)
 ## Week 12 (21-27 apr)
 ## Week 13 (28 apr-4 may)

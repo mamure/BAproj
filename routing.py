@@ -58,8 +58,7 @@ class WCETTRouting(RoutingProtocol):
         if not all_paths:
             return None
         
-        path_metrics = []
-
+        weights = {}
         for path in all_paths:
             if len(path) < 2:
                 continue
@@ -71,21 +70,13 @@ class WCETTRouting(RoutingProtocol):
                     edges.append(edge)
                     
             if edges:
-                metric, congested_count = wcett.compute_wcett(edges, self.packet_sz, self.beta)
-                path_metrics.append((path, metric, congested_count))
+                wcett_temp = wcett.compute_wcett(edges, self.packet_sz, self.beta)
+                weights[tuple(path)] = wcett_temp
 
-        if not path_metrics:
+        if not weights:
             return None
-        
-        path_metrics.sort(key=lambda x: (
-            1 if x[2] > wcett_lb.LOAD_BALANCE_THRESHOLD else 0,
-            x[2],
-            x[1]
-            ))
-        
-        best_path = path_metrics[0][0]
-        self.packet_cache[(src_id, dest_id)] = best_path
-        
+
+        best_path = min(weights, key=weights.get)
         if best_path and len(best_path) >= 2:
             return best_path[1]
         return None
@@ -121,9 +112,9 @@ class WCETT_LBRouting(RoutingProtocol):
             return None
         
         path_metrics.sort(key=lambda x: (
-            1 if x[2] > wcett_lb.LOAD_BALANCE_THRESHOLD else 0,
-            x[2],
-            x[1]
+            1 if x[2] > wcett_lb.LOAD_BALANCE_THRESHOLD else 0, # weights in path if there are more than allowed congested nodes
+            x[2], # congested nodes
+            x[1] # weights in path
         ))
         
         best_path = path_metrics[0][0]

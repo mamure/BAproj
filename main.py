@@ -3,25 +3,23 @@ import routing
 import logging
 import time
 import random as rnd
+import threading
 
 class MeshNetworkSimulator:
     def __init__(self):
         self.network = initialize_network()
         
     def simulate_traffic(self, duration=30, load=50):
-        """_summary_
-
+        """
         Args:
             duration (int, optional): Duration of simulation in seconds. Defaults to 30.
             load (int, optional): packets per second. Defaults to 50.
-
-        Returns:
-            float: error rate in the simulation
         """
         self.network.start_network()
         
         total_packets = 0
         packets_sent = 0
+        packet_results = {}
         
         start_time = time.time()
         
@@ -29,38 +27,64 @@ class MeshNetworkSimulator:
             if node.type == "C"]
         igw_nodes = [node_id for node_id, node in self.network.nodes.items() 
             if node.type == "IGW"]
-    
+        
+        def send_packet_thread(packet_id, src_id, dest_id):
+            priority = 3 if rnd.random() < 0.1 else 1
+            result = self.network.send_packet_graph(src_id, dest_id, priority)
+            packet_results[packet_id] = result
+        
+        threads = []
+        active_threads = []
+        max_concurrent_threads = 16
+        cleanup = 10
+        
         try:
             while time.time() - start_time < duration:
+                if total_packets % cleanup == 0:
+                    active_threads = [t for t in active_threads if t.is_alive()]
+            
+                if len(active_threads) >= max_concurrent_threads:
+                    time.sleep(0.01)
+                    active_threads = [t for t in active_threads if t.is_alive()]
+                    continue
+            
                 src_id = rnd.choice(c_nodes)
                 dest_id = rnd.choice(igw_nodes)
                 total_packets += 1
                 
-                result = self.network.send_packet_graph(src_id, dest_id)
+                t = threading.Thread(
+                    target=send_packet_thread,
+                    args=(total_packets, src_id, dest_id)
+                )
+                t.daemon = True
+                t.start()
+                active_threads.append(t)
+                threads.append(t)
                 
-                if result.get('success'):
-                    packets_sent += 1
-                    logging.info(f"Packet from {src_id} to {dest_id}, result: {result}")
-                else:
-                    logging.info(f"Packet from {src_id} to {dest_id} result: {result}")
-                # progess every 1000 packets
-                if total_packets % 1000 == 0:
+                if total_packets % 200 == 0:
                     elapsed = time.time() - start_time
                     print(f"Progress: {total_packets} packets, {elapsed:.1f}s elapsed")
+                    
                 time.sleep(1 / load)
+
         except KeyboardInterrupt:
             print("Simulation interrupted")
         finally:
-            self.network.stop_network()
+            print("Waiting for threads to complete...")
+            for t in threads:
+                t.join(timeout=0.5)
+            
+            for result in packet_results.values():
+                if result.get('success'):
+                    packets_sent += 1
+            
             elapsed = time.time() - start_time
-            throughput = packets_sent / elapsed
             error_rate = ((total_packets - packets_sent) / total_packets)*100
             
             print("\n=== Simulation Results ===")
             print(f'Duration: {elapsed:.1f} seconds')
             print(f'Total packets: {total_packets}')
             print(f'Successful packets: {packets_sent}')
-            print(f'Measured throughput: {throughput:.1f} pkts/sec')
             print(f'Error rate: {error_rate:.1f}%')
             
             return error_rate
@@ -76,9 +100,12 @@ class MeshNetworkSimulator:
             logging.error("NO IGW in network")
             return False
         
+        self.network.routing_algorithm = None
+        hop_count_alg = routing.HopCountRouting()
+        
         for node_id, node in self.network.nodes.items():
             for igw_id in igw_nodes:
-                next_hop = routing.HopCountRouting().compute_routing_tb(self.network, node_id, igw_id)
+                next_hop = hop_count_alg.compute_routing_tb(self.network, node_id, igw_id)
                 if next_hop is not None:
                     node.routing_table[igw_id] = next_hop
         
@@ -96,9 +123,12 @@ class MeshNetworkSimulator:
             logging.error("NO IGW in network")
             return False
         
+        self.network.routing_algorithm = None
+        wcett_alg = routing.WCETTRouting()
+        
         for node_id, node in self.network.nodes.items():
             for igw_id in igw_nodes:
-                next_hop = routing.WCETTRouting().compute_routing_tb(self.network, node_id, igw_id)
+                next_hop = wcett_alg.compute_routing_tb(self.network, node_id, igw_id)
                 if next_hop is not None:
                     node.routing_table[igw_id] = next_hop
         
@@ -116,11 +146,25 @@ class MeshNetworkSimulator:
             logging.error("NO IGW in network")
             return False
         
+        wcett_lb_algorithm = routing.WCETT_LBRouting()
+        self.network.routing_algorithm = wcett_lb_algorithm
+        
         for node_id, node in self.network.nodes.items():
+            node.routing_table = {}  # Clear existing routing table
             for igw_id in igw_nodes:
-                next_hop = routing.WCETT_LBRouting().compute_routing_tb(self.network, node_id, igw_id)
+                next_hop = wcett_lb_algorithm.compute_routing_tb(self.network, node_id, igw_id)
                 if next_hop is not None:
                     node.routing_table[igw_id] = next_hop
+        
+        print(f"After setup, network routing algorithm is: {self.network.routing_algorithm}")
+        print(f"Is WCETT_LBRouting: {isinstance(self.network.routing_algorithm, routing.WCETT_LBRouting)}")
+        
+        # Print path cache for debugging
+        if hasattr(wcett_lb_algorithm, 'path_cache'):
+            print("WCETT-LB initial paths:")
+            for (src, dest), path in wcett_lb_algorithm.path_cache.items():
+                if len(path) > 0:
+                    print(f"  {src} → {dest}: {path}")
         
         logging.info(f"WCETT-LB routing tables created for {len(self.network.nodes)} nodes")
         return True
@@ -153,6 +197,7 @@ def main():
                 print("Failed")
             break
         elif choice == "3":
+            # Run simulation with WCETT-LB from routing
             if sim.wcett_lb_sim():
                 sim.simulate_traffic()
             else:

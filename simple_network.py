@@ -49,5 +49,4 @@ def visualize_network(network):
     
 if __name__ == "__main__":
     network, igw, c = initialize_simple_network()
-    test = routing.WCETTRouting()
     visualize_network(network)

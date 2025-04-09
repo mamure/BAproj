@@ -3,11 +3,15 @@ import random as rnd
 import time
 import queue
 from packet import Packet
-from routing_alg.wcett_lb import update_congest_status
+from routing_alg.wcett_lb import update_congest_status, update_path
+import routing
 
 NODE_ID_COUNTER = 0
 EDGE_ID_COUNTER = 0
 PACKET_ID_COUNTER = 0
+
+BUFFER_SIZE = 100
+QUEUE_PROCESS_TIME = 0.05  # time for node to process packet. Adjust to fill up queue.
 
 def node_id_manager():
     global NODE_ID_COUNTER
@@ -47,7 +51,7 @@ class Node:
         self.routing_table = {}
         self.load = 0
         self.congest_status = False
-        self.queue = queue.Queue(maxsize=20)
+        self.queue = queue.Queue(maxsize=BUFFER_SIZE)
         self.received_packets = []
         self.sent_packets = {}
         self.dropped_packets = []
@@ -84,6 +88,11 @@ class Node:
             try:
                 update_congest_status(self, self.network)
                 self.load = self.queue.qsize()
+
+                for dest_id in self.routing_table.keys():
+                    routing_algorithm = self.network.routing_algorithm
+                    if routing_algorithm and isinstance(routing_algorithm, routing.WCETT_LBRouting):
+                        switched, paths = update_path(self, self.network, dest_id, routing_algorithm)
                 time.sleep(1)
             except Exception as e:
                 if self.running:
@@ -95,9 +104,8 @@ class Node:
                 message = self.queue.get(timeout=1)
                 packet = message['packet']
                 src = message['sender']
-
                 self.received_packets.append(packet)
-                
+                time.sleep(QUEUE_PROCESS_TIME)
                 if packet.type == 'DATA':
                     self.send_ack(packet, src)
                 self.queue.task_done()
@@ -109,14 +117,15 @@ class Node:
     
     def send_ack(self, packet, src):
         packet_id = packet_id_manager()
-        ack = Packet(packet_id, self.id, packet.src_id, 64,"ACK")
+        ack = Packet(packet_id, self.id, packet.src_id, 64,"ACK", 3)
         
         src.queue.put({'packet': ack, 'sender': self})
         
     def receive_message(self, packet, src):
         try:
-            print(f'Node {self.id} queue size: {self.queue.qsize()}')
-            if self.queue.qsize() >= 20:
+            current_queue = self.queue.qsize()
+            
+            if self.congest_status:
                 self.dropped_packets.append({
                     'packet_id': packet.id,
                     'src': packet.src_id,
@@ -124,7 +133,16 @@ class Node:
                     'time': time.time(),
                     'reason': 'buffer_full'
                 })
-                print(f'packet dropped')
+                return False
+            
+            if current_queue >= self.queue.maxsize * 0.8 and packet.priority < 3:
+                self.dropped_packets.append({
+                    'packet_id': packet.id,
+                    'src': packet.src_id,
+                    'dest': packet.dest_id,
+                    'time': time.time(),
+                    'reason': 'queue_threshold'
+                })
                 return False
             else:
                 self.queue.put({'packet': packet, 'sender': src})
@@ -157,16 +175,19 @@ class Edge:
         if rnd.random() < self.loss_rate:
             return {'success': False, 'reason': 'packet_loss'}
         
-        delay = packet.size / self.bandwidth * 0.001
+        delay = packet.size / self.bandwidth * 0.01
         time.sleep(delay)
         
-        dest.receive_message(packet, src)
+        receive_result = dest.receive_message(packet, src)
+        if not receive_result:
+            return {'success': False, 'reason': 'buffer_full'}
         return {'success': True}
     
 class Graph:
-    def __init__(self):
+    def __init__(self, routing_algorithm=None):
         self.nodes = {}
         self.edges = {}
+        self.routing_algorithm = routing_algorithm
         
     def create_node(self, type):
         node = Node(node_id_manager(), type, network=self)
@@ -195,7 +216,7 @@ class Graph:
                 return edge
         return None
     
-    def send_packet_graph(self, src_id, dest_id):
+    def send_packet_graph(self, src_id, dest_id, priority):
         if src_id not in self.nodes or dest_id not in self.nodes:
             return {'success': False, 'reason': 'invalid_node_id'}
         
@@ -203,7 +224,7 @@ class Graph:
         dest = self.nodes[dest_id]
         
         packet_id = packet_id_manager()
-        packet = Packet(packet_id, src_id, dest_id, 1024)
+        packet = Packet(packet_id, src_id, dest_id, 1024, "DATA", priority)
         packet.route_taken.append(src_id)
         
         if not src.running:
@@ -215,7 +236,7 @@ class Graph:
         next_node = None
         
         while current_node.id != dest_id:
-            if dest_id not in src.routing_table:
+            if dest_id not in current_node.routing_table:
                 return {'success': False, 'reason': 'no_route_found'}
             next_hop_id = current_node.routing_table[dest_id]
             next_node = self.nodes[next_hop_id]
@@ -228,7 +249,7 @@ class Graph:
             for retry in range(max_tries):
                 send_result = edge.send_packet_edge(current_node, next_node, packet)
                 if send_result['success']:
-                    time.sleep(0.1)
+                    time.sleep(0.01)
                     packet.route_taken.append(next_hop_id)
                     current_node.sent_packets[packet.id] = time.time()
                     current_node = next_node
@@ -239,4 +260,6 @@ class Graph:
                     return send_result
             else:
                 return {'success': False, 'reason': 'max_tries'}
-        return {'success': True, 'packet': packet}
+        if packet.id in dest.dropped_packets:
+            return {'success': False, 'reason': 'dropped_at_destination', 'packet': packet.id}
+        return {'success': True, 'packet ID': packet.id}

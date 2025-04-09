@@ -2,7 +2,7 @@ import random as rnd
 import time
 
 class Packet:
-    def __init__(self, packet_id, src_id, dest_id, size, packet_type="DATA"):
+    def __init__(self, packet_id, src_id, dest_id, size, packet_type="DATA", priority=1):
         """
         Args:
             src (int)
@@ -17,6 +17,7 @@ class Packet:
         self.type = packet_type
         self.time = time.time()
         self.route_taken = []
+        self.priority = priority # 1=low, 3=high
         
     def add_hop(self, node_id):
         self.route_taken.append(node_id)

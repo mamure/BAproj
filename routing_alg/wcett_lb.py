@@ -1,7 +1,7 @@
 from routing_alg import wcett
 
-CONGESTION_THRESHOLD = 5
-LOAD_BALANCE_THRESHOLD = 2
+CONGESTION_THRESHOLD = 0.75
+LOAD_BALANCE_THRESHOLD = 0
 
 def update_congest_status(node, nw):
     """Updates the node congestion status
@@ -15,6 +15,8 @@ def update_congest_status(node, nw):
             total_bw += edge.bandwidth
             count += 1
     avg_tx_rate = total_bw / count if count > 0 else 0
+    
+    node.load = node.queue.qsize()
     
     if avg_tx_rate <= 0:
         node.congest_status = True
@@ -48,3 +50,26 @@ def get_congested_node_count(nw, path):
         if node.congest_status:
             count += 1
     return count
+
+def update_path(node, nw, dest_id, routing_alg):
+    current_path = routing_alg.path_cache.get((node.id, dest_id))
+    # print(f'current path {current_path}')
+    if not current_path:
+        return False, None
+    
+    congested_nodes = []
+    for node_id in current_path[1:-1]:
+        if nw.nodes[node_id].congest_status:
+            congested_nodes.append(node_id)
+    if len(congested_nodes) > LOAD_BALANCE_THRESHOLD:
+        new_path = routing_alg.alternative_path(nw, node.id, dest_id, congested_nodes)
+        if new_path and new_path != current_path:
+            routing_alg.path_cache[(node.id, dest_id)] = new_path
+            if len(new_path) >= 2:
+                node.routing_table[dest_id] = new_path[1]
+                print(f"WCETT-LB PATH SWITCH: Node {node.id} switched path to {dest_id}: {current_path} → {new_path}")
+                return True, (current_path, new_path)
+        else:
+            print(f"⚠️ Node {node.id} could not find alternative path to {dest_id} that avoids {congested_nodes}")
+                
+    return False, None

@@ -78,9 +78,11 @@ Focused this week on writing, including both design considerations and architect
 
 The WCETT-LB implementation is almost complete, but there are still some missing features, such as dropping packets when the buffer or queue is full. I also need to write the section about WCETT-LB.
 ## Week 10 (7-13 apr)
-TODO:
-testing throughput in network, how long it takes to read/write message
-Test what can the network do with hardware, like more nodes and such
+I’ve finished the WCETT-LB implementation so that it works now. I may still need to fine-tune some parameters, such as when a node is considered congested and when path switching should occur, but that will be more of an optimization task, I think. I’ll also look into how I can produce results beyond just the network error rate.
+
+I’ll need to create some larger (non-random) networks to observe how the algorithms perform at scale, including metrics like throughput and the time it takes to read/write messages. I’d like to test this on networks of different sizes.
+
+I’ve written some notes about WCETT-LB and reviewed some of the comments. I’ll begin the implementation section in week 11.
 ## Week 11 (14-20 apr)
 ## Week 12 (21-27 apr)
 ## Week 13 (28 apr-4 may)

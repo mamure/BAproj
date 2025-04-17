@@ -66,6 +66,7 @@ def update_path(node, nw, dest_id, routing_alg):
             routing_alg.path_cache[(node.id, dest_id)] = new_path
             if len(new_path) >= 2:
                 node.routing_table[dest_id] = new_path[1]
+                print(f"WCETT-LB PATH SWITCH: Node {node.id} switched path to {dest_id}: {current_path} → {new_path}")
                 return True, (current_path, new_path)
         else:
             print(f"⚠️ Node {node.id} could not find alternative path to {dest_id} that avoids {congested_nodes}")

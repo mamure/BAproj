@@ -156,15 +156,14 @@ class MeshNetworkSimulator:
                 if next_hop is not None:
                     node.routing_table[igw_id] = next_hop
         
-        print(f"After setup, network routing algorithm is: {self.network.routing_algorithm}")
-        print(f"Is WCETT_LBRouting: {isinstance(self.network.routing_algorithm, routing.WCETT_LBRouting)}")
+        print(f"Is WCETT-LB Routing Algorithm: {isinstance(self.network.routing_algorithm, routing.WCETT_LBRouting)}")
         
-        # Print path cache for debugging
-        if hasattr(wcett_lb_algorithm, 'path_cache'):
-            print("WCETT-LB initial paths:")
-            for (src, dest), path in wcett_lb_algorithm.path_cache.items():
-                if len(path) > 0:
-                    print(f"  {src} → {dest}: {path}")
+        # # Print path cache for debugging
+        # if hasattr(wcett_lb_algorithm, 'path_cache'):
+        #     print("WCETT-LB initial paths:")
+        #     for (src, dest), path in wcett_lb_algorithm.path_cache.items():
+        #         if len(path) > 0:
+        #             print(f"  {src} → {dest}: {path}")
         
         logging.info(f"WCETT-LB routing tables created for {len(self.network.nodes)} nodes")
         return True

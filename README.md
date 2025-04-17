@@ -84,6 +84,11 @@ I’ll need to create some larger (non-random) networks to observe how the algor
 
 I’ve written some notes about WCETT-LB and reviewed some of the comments. I’ll begin the implementation section in week 11.
 ## Week 11 (14-20 apr)
+End of this week have implementation section and background ready-ish
+
+The results of the test i should be able to look at and discuss: error rate at different loads, throughput, end-to-end delay. All at different scales.
+
+Maybe make my own routing LB algorithm?
 ## Week 12 (21-27 apr)
 ## Week 13 (28 apr-4 may)
 ## Week 14 (5-11 may)

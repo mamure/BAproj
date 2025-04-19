@@ -91,7 +91,7 @@ class Node:
 
                 for dest_id in self.routing_table.keys():
                     routing_algorithm = self.network.routing_algorithm
-                    if routing_algorithm and isinstance(routing_algorithm, routing.WCETT_LBRouting):
+                    if routing_algorithm and isinstance(routing_algorithm, routing.WCETT_LBRouting) or isinstance(routing_algorithm, routing.WCETT_LB_ADVRouting):
                         switched, paths = update_path(self, self.network, dest_id, routing_algorithm)
                 time.sleep(1)
             except Exception as e:

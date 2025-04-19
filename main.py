@@ -1,4 +1,5 @@
-from complex_network import initialize_network
+import complex_network
+import advanced_network
 import routing
 import logging
 import time
@@ -6,8 +7,11 @@ import random as rnd
 import threading
 
 class MeshNetworkSimulator:
-    def __init__(self):
-        self.network = initialize_network()
+    def __init__(self, type):
+        if type == 0:
+            self.network = complex_network.initialize_network()
+        elif type == 1:
+            self.network = advanced_network.initialize_network()
         
     def simulate_traffic(self, duration=30, load=50):
         """
@@ -167,19 +171,53 @@ class MeshNetworkSimulator:
         
         logging.info(f"WCETT-LB routing tables created for {len(self.network.nodes)} nodes")
         return True
+    
+    def wcett_lb_adv_sim(self):
+        """
+        Define all routing tables using WCETT-LB Advanced metric algorithm. 
+        The destination should be the IGW nodes' id.
+        """
+        igw_nodes = [node_id for node_id, node in self.network.nodes.items() 
+                if node.type == "IGW"]
+        if not igw_nodes: 
+            logging.error("NO IGW in network")
+            return False
+        
+        wcett_lb_adv_algorithm = routing.WCETT_LB_ADVRouting()
+        self.network.routing_algorithm = wcett_lb_adv_algorithm
+        
+        for node_id, node in self.network.nodes.items():
+            node.routing_table = {}  # Clear existing routing table
+            for igw_id in igw_nodes:
+                next_hop = wcett_lb_adv_algorithm.compute_routing_tb(self.network, node_id, igw_id)
+                if next_hop is not None:
+                    node.routing_table[igw_id] = next_hop
+        
+        print(f"Is WCETT-LB Advanced Routing Algorithm: {isinstance(self.network.routing_algorithm, routing.WCETT_LB_ADVRouting)}")
+        
+        # Print path cache for debugging
+        if hasattr(wcett_lb_adv_algorithm, 'path_cache'):
+            print("WCETT-LB Advanced initial paths:")
+            for (src, dest), path in wcett_lb_adv_algorithm.path_cache.items():
+                if len(path) > 0:
+                    print(f"  {src} → {dest}: {path}")
+        
+        logging.info(f"WCETT-LB Advanced routing tables created for {len(self.network.nodes)} nodes")
+        return True
 
 def main():
     logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-    sim = MeshNetworkSimulator()
+    sim = MeshNetworkSimulator(1)
     
     while True:
         print("\nSelect an option:")
         print("1. Run Hop Count")
         print("2. Run WCETT")
         print("3. Run WCETT-LB")
-        print("4. Exit")
+        print("4. Run WCETT-LB Advanced")
+        print("5. Exit")
         
-        choice = input("Enter 1, 2, 3 or 4: ")
+        choice = input("Enter: ")
         
         if choice == "1":
             # Run simulation with Hop Count from routing
@@ -203,10 +241,17 @@ def main():
                 print("Failed")
             break
         elif choice == "4":
+            # Run simulation with WCETT-LB Advanced from routing
+            if sim.wcett_lb_adv_sim():
+                sim.simulate_traffic()
+            else:
+                print("Failed")
+            break
+        elif choice == "5":
             print("Exiting...")
             break
         else:
-            print("Invalid choice. Please enter 1, 2, or 3.")
+            print("Invalid choice.")
 
 if __name__ == "__main__":
     main()

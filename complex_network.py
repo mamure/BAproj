@@ -10,11 +10,6 @@ def initialize_network():
     - z Clients
     The routers are interconnected in a mesh-like manner, and clients are attached to routers.
     
-    Args:
-        x (int): Number of IGWs.
-        y (int): Number of MRs.
-        z (int): Number of Clients.
-    
     Returns:
         Network: A Network object containing all nodes and edges.
     """

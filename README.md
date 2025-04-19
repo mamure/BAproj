@@ -89,6 +89,8 @@ End of this week have implementation section and background ready-ish
 The results of the test i should be able to look at and discuss: error rate at different loads, throughput, end-to-end delay. All at different scales.
 
 Maybe make my own routing LB algorithm?
+
+Found that depending on the network the routing path may went through clients from mesh routers which i did not want so fixed that.
 ## Week 12 (21-27 apr)
 ## Week 13 (28 apr-4 may)
 ## Week 14 (5-11 may)

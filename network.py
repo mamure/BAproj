@@ -4,6 +4,7 @@ import time
 import queue
 from packet import Packet
 from routing_alg.wcett_lb import update_congest_status, update_path
+# TODO: fix import from routing_alg.wcett_lb_adv import update_congest_status, update_path
 import routing
 
 NODE_ID_COUNTER = 0
@@ -92,6 +93,7 @@ class Node:
                 for dest_id in self.routing_table.keys():
                     routing_algorithm = self.network.routing_algorithm
                     if routing_algorithm and isinstance(routing_algorithm, routing.WCETT_LBRouting) or isinstance(routing_algorithm, routing.WCETT_LB_ADVRouting):
+                        # TODO FIK IMPORT
                         switched, paths = update_path(self, self.network, dest_id, routing_algorithm)
                 time.sleep(1)
             except Exception as e:

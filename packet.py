@@ -1,4 +1,3 @@
-import random as rnd
 import time
 
 class Packet:
@@ -18,6 +17,8 @@ class Packet:
         self.time = time.time()
         self.route_taken = []
         self.priority = priority # 1=low, 3=high
+        self.created_time = time.time()
+        self.delivered_time = None
         
     def add_hop(self, node_id):
         self.route_taken.append(node_id)

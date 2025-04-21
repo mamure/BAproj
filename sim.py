@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 from main import MeshNetworkSimulator
 
-def run_all_experiments():
+def run_all_sims():
     loads = [25, 50, 100, 150, 200]
     
     hop_count_er = []
@@ -13,7 +13,7 @@ def run_all_experiments():
     sim.hop_count_sim()
     for load in loads:
         print(f'\nHop Count Sim with load {load} pkt/s')
-        er = sim.simulate_traffic(duration=180, load=load)
+        er, throughput, delay = sim.simulate_traffic(duration=180, load=load)
         hop_count_er.append(er)
     
     # WCETT
@@ -21,7 +21,7 @@ def run_all_experiments():
     sim.wcett_sim()
     for load in loads:
         print(f'\nWCETT Sim with load {load} pkt/s')
-        er = sim.simulate_traffic(duration=180, load=load)
+        er, throughput, delay = sim.simulate_traffic(duration=180, load=load)
         wcett_er.append(er)
     
     # WCETT-LB
@@ -29,7 +29,7 @@ def run_all_experiments():
     sim.wcett_lb_sim()
     for load in loads:
         print(f'\nWCETT-LB Sim with load {load} pkt/s')
-        er = sim.simulate_traffic(duration=180, load=load)
+        er, throughput, delay = sim.simulate_traffic(duration=180, load=load)
         wcett_lb_er.append(er)
     
     # Now plot the results
@@ -45,4 +45,4 @@ def run_all_experiments():
     plt.show()
 
 if __name__ == "__main__":
-    run_all_experiments()
+    run_all_sims()

@@ -1,7 +1,7 @@
 from routing_alg import wcett
 
-CONGESTION_THRESHOLD = 0.75
-LOAD_BALANCE_THRESHOLD = 0
+CONGESTION_THRESHOLD = 0.6
+LOAD_BALANCE_THRESHOLD = 1
 
 def update_congest_status(node, nw):
     """Updates the node congestion status

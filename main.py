@@ -19,6 +19,8 @@ class MeshNetworkSimulator:
         
         total_packets = 0
         packets_sent = 0
+        total_bytes = 0
+        total_delay = 0.0
         packet_results = {}
         
         start_time = time.time()
@@ -77,9 +79,19 @@ class MeshNetworkSimulator:
             for result in packet_results.values():
                 if result.get('success'):
                     packets_sent += 1
+                    packet = result.get('packet')
+                    
+                    total_bytes += packet.size
+                    
+                    if packet.delivered_time and packet.created_time:
+                        delay = packet.delivered_time - packet.created_time
+                        total_delay += delay
             
             elapsed = time.time() - start_time
             error_rate = ((total_packets - packets_sent) / total_packets)*100
+            
+            throughput = (total_bytes * 8 / 1000) / elapsed if elapsed > 0 else 0
+            avg_delay = (total_delay * 1000 / packets_sent) if packets_sent > 0 else 0
             
             print("\n=== Simulation Results ===")
             print(f'Duration: {elapsed:.1f} seconds')
@@ -87,7 +99,7 @@ class MeshNetworkSimulator:
             print(f'Successful packets: {packets_sent}')
             print(f'Error rate: {error_rate:.1f}%')
             
-            return error_rate
+            return error_rate, throughput, avg_delay
     
     def hop_count_sim(self):
         """

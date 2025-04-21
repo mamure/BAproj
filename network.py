@@ -262,4 +262,5 @@ class Graph:
                 return {'success': False, 'reason': 'max_tries'}
         if packet.id in dest.dropped_packets:
             return {'success': False, 'reason': 'dropped_at_destination', 'packet': packet.id}
-        return {'success': True, 'packet ID': packet.id}
+        packet.delivered_time = time.time()
+        return {'success': True, 'packet': packet}

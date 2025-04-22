@@ -31,6 +31,13 @@ class MeshNetworkSimulator:
             if node.type == "IGW"]
         
         def send_packet_thread(packet_id, src_id, dest_id):
+            """_summary_
+
+            Args:
+                packet_id (_type_): _description_
+                src_id (_type_): _description_
+                dest_id (_type_): _description_
+            """
             priority = 3 if rnd.random() < 0.1 else 1
             result = self.network.send_packet_graph(src_id, dest_id, priority)
             packet_results[packet_id] = result
@@ -90,14 +97,17 @@ class MeshNetworkSimulator:
             elapsed = time.time() - start_time
             error_rate = ((total_packets - packets_sent) / total_packets)*100
             
+            # Throughput in Kbps (kilobits per second)
             throughput = (total_bytes * 8 / 1000) / elapsed if elapsed > 0 else 0
-            avg_delay = (total_delay * 1000 / packets_sent) if packets_sent > 0 else 0
+            avg_delay = (total_delay / packets_sent) if packets_sent > 0 else 0
             
             print("\n=== Simulation Results ===")
             print(f'Duration: {elapsed:.1f} seconds')
             print(f'Total packets: {total_packets}')
             print(f'Successful packets: {packets_sent}')
             print(f'Error rate: {error_rate:.1f}%')
+            print(f'throughput: {throughput:.1f} kb/s')
+            print(f'avg_delay: {avg_delay:.2f} seconds')
             
             return error_rate, throughput, avg_delay
     
@@ -170,17 +180,12 @@ class MeshNetworkSimulator:
         
         print(f"Is WCETT-LB Routing Algorithm: {isinstance(self.network.routing_algorithm, routing.WCETT_LBRouting)}")
         
-        # # Print path cache for debugging
-        # if hasattr(wcett_lb_algorithm, 'path_cache'):
-        #     print("WCETT-LB initial paths:")
-        #     for (src, dest), path in wcett_lb_algorithm.path_cache.items():
-        #         if len(path) > 0:
-        #             print(f"  {src} → {dest}: {path}")
-        
         logging.info(f"WCETT-LB routing tables created for {len(self.network.nodes)} nodes")
         return True
 
 def main():
+    """_summary_
+    """
     logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
     sim = MeshNetworkSimulator()
     

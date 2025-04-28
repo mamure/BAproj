@@ -4,6 +4,8 @@ import time
 import queue
 from packet import Packet
 from routing_alg.wcett_lb import update_congest_status, update_path
+import routing_alg.wcett_lb as wcett_lb
+import routing_alg.wcett_lb_adv as wcett_lb_adv
 # TODO: fix import from routing_alg.wcett_lb_adv import update_congest_status, update_path
 import routing
 
@@ -87,14 +89,18 @@ class Node:
     def monitor_congestion(self):
         while self.running:
             try:
-                update_congest_status(self, self.network)
+                print(f"[DEBUG network] Node {self.id}: enter monitor_congestion; queue_size={self.queue.qsize()}")
+                wcett_lb.update_congest_status(self, self.network)
+                print(f"[DEBUG network] Node {self.id}: congest_status={self.congest_status}")
                 self.load = self.queue.qsize()
 
                 for dest_id in self.routing_table.keys():
                     routing_algorithm = self.network.routing_algorithm
-                    if routing_algorithm and isinstance(routing_algorithm, routing.WCETT_LBRouting) or isinstance(routing_algorithm, routing.WCETT_LB_ADVRouting):
-                        # TODO FIK IMPORT
-                        switched, paths = update_path(self, self.network, dest_id, routing_algorithm)
+                    if routing_algorithm and isinstance(routing_algorithm, routing.WCETT_LBRouting):
+                        switched, paths = wcett_lb.update_path(self, self.network, dest_id, routing_algorithm)
+                    elif routing_algorithm and isinstance(routing_algorithm, routing.WCETT_LB_ADVRouting):
+                        switched, paths = wcett_lb_adv.update_path(self, self.network, dest_id, routing_algorithm)
+                        print(f"[DEBUG network] Node {self.id}: wcett_lb_adv.update_path to {dest_id} → switched={switched}, paths={paths}")
                 time.sleep(1)
             except Exception as e:
                 if self.running:
@@ -104,6 +110,7 @@ class Node:
         while self.running:
             try:
                 message = self.queue.get(timeout=1)
+                print(f"[DEBUG network] Node {self.id}: dequeued {message}")
                 packet = message['packet']
                 src = message['sender']
                 self.received_packets.append(packet)
@@ -120,7 +127,7 @@ class Node:
     def send_ack(self, packet, src):
         packet_id = packet_id_manager()
         ack = Packet(packet_id, self.id, packet.src_id, 64,"ACK", 3)
-        
+        print(f"[DEBUG network] Node {self.id}: sending ACK {ack.id} to Node {src.id}")
         src.queue.put({'packet': ack, 'sender': self})
         
     def receive_message(self, packet, src):
@@ -128,6 +135,7 @@ class Node:
             current_queue = self.queue.qsize()
             
             if self.congest_status:
+                print(f"[DEBUG network] Node {self.id}: dropping {packet.id} (congested)")
                 self.dropped_packets.append({
                     'packet_id': packet.id,
                     'src': packet.src_id,
@@ -138,6 +146,7 @@ class Node:
                 return False
             
             if current_queue >= self.queue.maxsize * 0.8 and packet.priority < 3:
+                print(f"[DEBUG network] Node {self.id}: dropping {packet.id} (threshold reached)")
                 self.dropped_packets.append({
                     'packet_id': packet.id,
                     'src': packet.src_id,
@@ -147,6 +156,7 @@ class Node:
                 })
                 return False
             else:
+                print(f"[DEBUG network] Node {self.id}: enqueuing {packet.id}")
                 self.queue.put({'packet': packet, 'sender': src})
                 return True
         except Exception as e:

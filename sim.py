@@ -14,7 +14,7 @@ def run_all_experiments():
     sim.hop_count_sim()
     for load in loads:
         print(f'\nHop Count Sim with load {load} pkt/s')
-        er = sim.simulate_traffic(duration=180, load=load)
+        er = sim.simulate_traffic(duration=10, load=load)
         hop_count_er.append(er)
     
     # WCETT
@@ -22,7 +22,7 @@ def run_all_experiments():
     sim.wcett_sim()
     for load in loads:
         print(f'\nWCETT Sim with load {load} pkt/s')
-        er = sim.simulate_traffic(duration=180, load=load)
+        er = sim.simulate_traffic(duration=10, load=load)
         wcett_er.append(er)
     
     # WCETT-LB
@@ -30,7 +30,7 @@ def run_all_experiments():
     sim.wcett_lb_sim()
     for load in loads:
         print(f'\nWCETT-LB Sim with load {load} pkt/s')
-        er = sim.simulate_traffic(duration=180, load=load)
+        er = sim.simulate_traffic(duration=10, load=load)
         wcett_lb_er.append(er)
     
     # WCETT-LB Advandced
@@ -38,7 +38,7 @@ def run_all_experiments():
     sim.wcett_lb_adv_sim()
     for load in loads:
         print(f'\nWCETT-LB Advanced Sim with load {load} pkt/s')
-        er = sim.simulate_traffic(duration=180, load=load)
+        er = sim.simulate_traffic(duration=10, load=load)
         wcett_lb_adv_er.append(er)
         
     print(f"Hop count results: {hop_count_er}")

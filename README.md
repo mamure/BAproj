@@ -92,7 +92,7 @@ Maybe make my own routing LB algorithm?
 
 Found that depending on the network the routing path may went through clients from mesh routers which i did not want so fixed that.
 ## Week 12 (21-27 apr)
-I have made some actual testing that have provided some results that I can begin to comment on (error rate, throughput and end-to-end delay). The test were only done on the small network. I have started looking at "stress" testing the network to see how [finish sentence]. I some bits in he report so it was ready for the peer-review. I have started on looking at the WCETT-LB version originally presented (the one i have made utilizes post congestion detextoin, while the "original" does it pre).
+I have conducted initial tests that have produced results on which I can begin to comment, including error rate, throughput, and end-to-end delay. The tests were performed only on the small network. I have also started exploring “stress” testing of the network to evaluate its performance under high load conditions and very large networks. Additionally, I have written some things in the report to prepare it for peer review. Furthermore, I have begun examining the original WCETT-LB version, in which congestion detection occurs before routing decisions are made, whereas the version I developed utilizes post-congestion detection.
 ## Week 13 (28 apr-4 may)
 ## Week 14 (5-11 may)
 ## Week 15 (12-18 may)

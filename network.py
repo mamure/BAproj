@@ -3,17 +3,15 @@ import random as rnd
 import time
 import queue
 from packet import Packet
-from routing_alg.wcett_lb import update_congest_status, update_path
 import routing_alg.wcett_lb as wcett_lb
 import routing_alg.wcett_lb_adv as wcett_lb_adv
-# TODO: fix import from routing_alg.wcett_lb_adv import update_congest_status, update_path
 import routing
 
 NODE_ID_COUNTER = 0
 EDGE_ID_COUNTER = 0
 PACKET_ID_COUNTER = 0
 
-BUFFER_SIZE = 100
+BUFFER_SIZE = 75
 QUEUE_PROCESS_TIME = 0.05  # time for node to process packet. Adjust to fill up queue.
 
 def node_id_manager():
@@ -89,9 +87,9 @@ class Node:
     def monitor_congestion(self):
         while self.running:
             try:
-                print(f"[DEBUG network] Node {self.id}: enter monitor_congestion; queue_size={self.queue.qsize()}")
+                # print(f"[DEBUG network] Node {self.id}: enter monitor_congestion; queue_size={self.queue.qsize()}")
                 wcett_lb.update_congest_status(self, self.network)
-                print(f"[DEBUG network] Node {self.id}: congest_status={self.congest_status}")
+                # print(f"[DEBUG network] Node {self.id}: congest_status={self.congest_status}")
                 self.load = self.queue.qsize()
 
                 for dest_id in self.routing_table.keys():
@@ -100,7 +98,7 @@ class Node:
                         switched, paths = wcett_lb.update_path(self, self.network, dest_id, routing_algorithm)
                     elif routing_algorithm and isinstance(routing_algorithm, routing.WCETT_LB_ADVRouting):
                         switched, paths = wcett_lb_adv.update_path(self, self.network, dest_id, routing_algorithm)
-                        print(f"[DEBUG network] Node {self.id}: wcett_lb_adv.update_path to {dest_id} → switched={switched}, paths={paths}")
+                        # print(f"[DEBUG network] Node {self.id}: wcett_lb_adv.update_path to {dest_id} → switched={switched}, paths={paths}")
                 time.sleep(1)
             except Exception as e:
                 if self.running:
@@ -110,7 +108,6 @@ class Node:
         while self.running:
             try:
                 message = self.queue.get(timeout=1)
-                print(f"[DEBUG network] Node {self.id}: dequeued {message}")
                 packet = message['packet']
                 src = message['sender']
                 self.received_packets.append(packet)
@@ -126,14 +123,11 @@ class Node:
     
     def send_ack(self, packet, src):
         packet_id = packet_id_manager()
-        ack = Packet(packet_id, self.id, packet.src_id, 64,"ACK", 3)
-        print(f"[DEBUG network] Node {self.id}: sending ACK {ack.id} to Node {src.id}")
+        ack = Packet(packet_id, self.id, packet.src_id, 64,"ACK")
         src.queue.put({'packet': ack, 'sender': self})
         
     def receive_message(self, packet, src):
         try:
-            current_queue = self.queue.qsize()
-            
             if self.congest_status:
                 print(f"[DEBUG network] Node {self.id}: dropping {packet.id} (congested)")
                 self.dropped_packets.append({
@@ -144,19 +138,7 @@ class Node:
                     'reason': 'buffer_full'
                 })
                 return False
-            
-            if current_queue >= self.queue.maxsize * 0.8 and packet.priority < 3:
-                print(f"[DEBUG network] Node {self.id}: dropping {packet.id} (threshold reached)")
-                self.dropped_packets.append({
-                    'packet_id': packet.id,
-                    'src': packet.src_id,
-                    'dest': packet.dest_id,
-                    'time': time.time(),
-                    'reason': 'queue_threshold'
-                })
-                return False
             else:
-                print(f"[DEBUG network] Node {self.id}: enqueuing {packet.id}")
                 self.queue.put({'packet': packet, 'sender': src})
                 return True
         except Exception as e:
@@ -228,7 +210,7 @@ class Graph:
                 return edge
         return None
     
-    def send_packet_graph(self, src_id, dest_id, priority):
+    def send_packet_graph(self, src_id, dest_id):
         if src_id not in self.nodes or dest_id not in self.nodes:
             return {'success': False, 'reason': 'invalid_node_id'}
         
@@ -236,7 +218,7 @@ class Graph:
         dest = self.nodes[dest_id]
         
         packet_id = packet_id_manager()
-        packet = Packet(packet_id, src_id, dest_id, 1024, "DATA", priority)
+        packet = Packet(packet_id, src_id, dest_id, 1024, "DATA")
         packet.route_taken.append(src_id)
         
         if not src.running:

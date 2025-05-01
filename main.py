@@ -13,7 +13,7 @@ class MeshNetworkSimulator:
         elif type == 1:
             self.network = advanced_network.initialize_network()
         
-    def simulate_traffic(self, duration=30, load=50):
+    def simulate_traffic(self, duration=120, load=40):
         """
         Args:
             duration (int, optional): Duration of simulation in seconds. Defaults to 30.
@@ -33,8 +33,7 @@ class MeshNetworkSimulator:
             if node.type == "IGW"]
         
         def send_packet_thread(packet_id, src_id, dest_id):
-            priority = 3 if rnd.random() < 0.1 else 1
-            result = self.network.send_packet_graph(src_id, dest_id, priority)
+            result = self.network.send_packet_graph(src_id, dest_id)
             packet_results[packet_id] = result
         
         threads = []
@@ -42,14 +41,23 @@ class MeshNetworkSimulator:
         max_concurrent_threads = 16
         cleanup = 10
         
+        packet_interval = 1.0 / load
+        next_packet_time = start_time
+        
         try:
             while time.time() - start_time < duration:
+                current_time = time.time()
                 if total_packets % cleanup == 0:
                     active_threads = [t for t in active_threads if t.is_alive()]
             
                 if len(active_threads) >= max_concurrent_threads:
                     time.sleep(0.01)
                     active_threads = [t for t in active_threads if t.is_alive()]
+                    continue
+                
+                if current_time < next_packet_time:
+                    sleep_time = min(next_packet_time - current_time, 0.01)
+                    time.sleep(sleep_time)
                     continue
             
                 src_id = rnd.choice(c_nodes)
@@ -65,11 +73,11 @@ class MeshNetworkSimulator:
                 active_threads.append(t)
                 threads.append(t)
                 
+                next_packet_time += packet_interval
+                
                 if total_packets % 200 == 0:
                     elapsed = time.time() - start_time
                     print(f"Progress: {total_packets} packets, {elapsed:.1f}s elapsed")
-                    
-                time.sleep(1 / load)
 
         except KeyboardInterrupt:
             print("Simulation interrupted")
@@ -207,7 +215,7 @@ class MeshNetworkSimulator:
 
 def main():
     logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-    sim = MeshNetworkSimulator(1)
+    sim = MeshNetworkSimulator(0)
     
     while True:
         print("\nSelect an option:")

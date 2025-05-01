@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 from main import MeshNetworkSimulator
 
 def run_all_experiments():
-    loads = [25, 50, 100, 150, 200]
+    loads = [5, 10, 20, 25, 40, 50]
     
     hop_count_er = []
     wcett_er = []
@@ -10,35 +10,35 @@ def run_all_experiments():
     wcett_lb_adv_er = []
     
     # Hop Count
-    sim = MeshNetworkSimulator(1)
+    sim = MeshNetworkSimulator(0)
     sim.hop_count_sim()
     for load in loads:
         print(f'\nHop Count Sim with load {load} pkt/s')
-        er = sim.simulate_traffic(duration=10, load=load)
+        er = sim.simulate_traffic(duration=120, load=load)
         hop_count_er.append(er)
     
     # WCETT
-    sim = MeshNetworkSimulator(1)
+    sim = MeshNetworkSimulator(0)
     sim.wcett_sim()
     for load in loads:
         print(f'\nWCETT Sim with load {load} pkt/s')
-        er = sim.simulate_traffic(duration=10, load=load)
+        er = sim.simulate_traffic(duration=120, load=load)
         wcett_er.append(er)
     
     # WCETT-LB
-    sim = MeshNetworkSimulator(1)
+    sim = MeshNetworkSimulator(0)
     sim.wcett_lb_sim()
     for load in loads:
         print(f'\nWCETT-LB Sim with load {load} pkt/s')
-        er = sim.simulate_traffic(duration=10, load=load)
+        er = sim.simulate_traffic(duration=120, load=load)
         wcett_lb_er.append(er)
     
     # WCETT-LB Advandced
-    sim = MeshNetworkSimulator(1)
+    sim = MeshNetworkSimulator(0)
     sim.wcett_lb_adv_sim()
     for load in loads:
         print(f'\nWCETT-LB Advanced Sim with load {load} pkt/s')
-        er = sim.simulate_traffic(duration=10, load=load)
+        er = sim.simulate_traffic(duration=120, load=load)
         wcett_lb_adv_er.append(er)
         
     print(f"Hop count results: {hop_count_er}")

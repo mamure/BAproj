@@ -2,7 +2,7 @@ from routing_alg import wcett, wcett_lb
 
 
 CONGESTION_THRESHOLD = 0.75
-LOAD_BALANCE_THRESHOLD = 0
+LOAD_BALANCE_THRESHOLD = 2
 
 def calculate_traffic_concentration(nw):
     """
@@ -15,7 +15,7 @@ def calculate_traffic_concentration(nw):
             if next_hop in traffic_concentration:
                 traffic_concentration[next_hop] += 1
                 
-    print(f"[DEBUG wcett_lb_adv] calculate_traffic_concentration: {traffic_concentration}")
+    # print(f"[DEBUG wcett_lb_adv] calculate_traffic_concentration: {traffic_concentration}")
     return traffic_concentration
 
 def get_min_ett(nw):
@@ -63,14 +63,14 @@ def compute_wcett_lb(edges, packet_sz, nw, path):
         
         # Add both terms to the load penalty
         load_penalty += (ql_b_term + ni_term)
-        print(f"[DEBUG wcett_lb_adv] compute_wcett_lb: node={node_id} "
-              f"ql_b={ql_b_term:.3f}, ni={ni_term:.3f}, congested={node.congest_status}")
+        # print(f"[DEBUG wcett_lb_adv] compute_wcett_lb: node={node_id} "
+            #   f"ql_b={ql_b_term:.3f}, ni={ni_term:.3f}, congested={node.congest_status}")
     
     # Final WCETT-LB value
     wcett_lb = base + load_penalty
-    print(f"[DEBUG wcett_lb_adv] compute_wcett_lb result: base={base:.3f}, "
-          f"load_penalty={load_penalty:.3f}, congested_nodes={congested_node_count}, "
-          f"final_wcett_lb={wcett_lb:.3f}")
+    # print(f"[DEBUG wcett_lb_adv] compute_wcett_lb result: base={base:.3f}, "
+    #       f"load_penalty={load_penalty:.3f}, congested_nodes={congested_node_count}, "
+    #       f"final_wcett_lb={wcett_lb:.3f}")
     return wcett_lb, congested_node_count
 
 def get_congested_node_count(nw, path):
@@ -80,15 +80,15 @@ def get_congested_node_count(nw, path):
     for node_id in path[1:-1]:
         node = nw.nodes[node_id]
         wcett_lb.update_congest_status(node, nw)
-        print(f"[DEBUG wcett_lb_adv] get_congested_node_count: node={node_id}, congested={node.congest_status}")
+        # print(f"[DEBUG wcett_lb_adv] get_congested_node_count: node={node_id}, congested={node.congest_status}")
         if node.congest_status:
             count += 1
-    print(f"[DEBUG wcett_lb_adv] total congested in path {path}: {count}")
+    # print(f"[DEBUG wcett_lb_adv] total congested in path {path}: {count}")
     return count
 
 def update_path(node, nw, dest_id, routing_alg):
     current_path = routing_alg.path_cache.get((node.id, dest_id))
-    print(f"[DEBUG wcett_lb_adv] update_path start: node={node.id}, dest={dest_id}, current_path={current_path}")
+    # print(f"[DEBUG wcett_lb_adv] update_path start: node={node.id}, dest={dest_id}, current_path={current_path}")
     if not current_path:
         return False, None
     
@@ -96,7 +96,7 @@ def update_path(node, nw, dest_id, routing_alg):
     for node_id in current_path[1:-1]:
         if nw.nodes[node_id].congest_status:
             congested_nodes.append(node_id)
-    print(f"[DEBUG wcett_lb_adv] congested_nodes on path: {congested_nodes}")
+    # print(f"[DEBUG wcett_lb_adv] congested_nodes on path: {congested_nodes}")
     if len(congested_nodes) > LOAD_BALANCE_THRESHOLD:
         new_path = routing_alg.alternative_path(nw, node.id, dest_id, congested_nodes)
         if new_path and new_path != current_path:

@@ -5,9 +5,12 @@ import logging
 import time
 import random as rnd
 import threading
+from network import reset_id_managers
 
 class MeshNetworkSimulator:
     def __init__(self, type):
+        reset_id_managers()
+        
         if type == 0:
             self.network = complex_network.initialize_network()
         elif type == 1:

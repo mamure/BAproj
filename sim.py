@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 from main import MeshNetworkSimulator
+from network import reset_id_managers
 
 def run_all_experiments():
     loads = [5, 10, 20, 25, 40, 50]
@@ -9,6 +10,8 @@ def run_all_experiments():
     wcett_lb_er = []
     wcett_lb_adv_er = []
     
+    reset_id_managers()
+    
     # Hop Count
     sim = MeshNetworkSimulator(0)
     sim.hop_count_sim()
@@ -16,6 +19,8 @@ def run_all_experiments():
         print(f'\nHop Count Sim with load {load} pkt/s')
         er = sim.simulate_traffic(duration=120, load=load)
         hop_count_er.append(er)
+        
+    reset_id_managers()
     
     # WCETT
     sim = MeshNetworkSimulator(0)
@@ -24,6 +29,8 @@ def run_all_experiments():
         print(f'\nWCETT Sim with load {load} pkt/s')
         er = sim.simulate_traffic(duration=120, load=load)
         wcett_er.append(er)
+        
+    reset_id_managers()
     
     # WCETT-LB
     sim = MeshNetworkSimulator(0)
@@ -32,6 +39,8 @@ def run_all_experiments():
         print(f'\nWCETT-LB Sim with load {load} pkt/s')
         er = sim.simulate_traffic(duration=120, load=load)
         wcett_lb_er.append(er)
+    
+    reset_id_managers()
     
     # WCETT-LB Advandced
     sim = MeshNetworkSimulator(0)

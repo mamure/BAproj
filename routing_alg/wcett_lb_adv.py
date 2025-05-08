@@ -1,7 +1,5 @@
 from routing_alg import wcett, wcett_lb
 
-
-CONGESTION_THRESHOLD = 0.75
 LOAD_BALANCE_THRESHOLD = 2
 
 def calculate_traffic_concentration(nw):

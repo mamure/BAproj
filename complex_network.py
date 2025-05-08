@@ -10,11 +10,6 @@ def initialize_network():
     - z Clients
     The routers are interconnected in a mesh-like manner, and clients are attached to routers.
     
-    Args:
-        x (int): Number of IGWs.
-        y (int): Number of MRs.
-        z (int): Number of Clients.
-    
     Returns:
         Network: A Network object containing all nodes and edges.
     """
@@ -34,26 +29,26 @@ def initialize_network():
     c11 = network.create_node("C")
     c12 = network.create_node("C")
     
-    network.add_edge(igw, mr1, 40, rnd.uniform(0.3,0.6))
-    network.add_edge(igw, mr3, 50, rnd.uniform(0.3,0.6))
-    network.add_edge(igw, mr4, 30, rnd.uniform(0.3,0.6))
+    network.add_edge(igw, mr1, 40, 0.1)
+    network.add_edge(igw, mr3, 50, 0.1)
+    network.add_edge(igw, mr4, 30, 0.1)
     
-    network.add_edge(mr1, mr5, 30, rnd.uniform(0.3,0.6))
-    network.add_edge(mr2, mr5, 50, rnd.uniform(0.3,0.6))
-    network.add_edge(mr2, mr3, 40, rnd.uniform(0.3,0.6))
-    network.add_edge(mr2, mr6, 60, rnd.uniform(0.3,0.6))
+    network.add_edge(mr1, mr5, 30, 0.1)
+    network.add_edge(mr2, mr5, 50, 0.1)
+    network.add_edge(mr2, mr3, 40, 0.1)
+    network.add_edge(mr2, mr6, 60, 0.1)
     
-    network.add_edge(c7, mr3, 25, rnd.uniform(0.3,0.6))
-    network.add_edge(c7, mr2, 55, rnd.uniform(0.3,0.6))
-    network.add_edge(c8, mr1, 35, rnd.uniform(0.3,0.6))
-    network.add_edge(c8, mr2, 55, rnd.uniform(0.3,0.6))
-    network.add_edge(c9, mr5, 45, rnd.uniform(0.3,0.6))
-    network.add_edge(c10, mr1, 35, rnd.uniform(0.3,0.6))
-    network.add_edge(c10, mr5, 45, rnd.uniform(0.3,0.6))
-    network.add_edge(c11, mr1, 35, rnd.uniform(0.3,0.6))
-    network.add_edge(c11, mr4, 35, rnd.uniform(0.3,0.6))
-    network.add_edge(c12, mr6, 65, rnd.uniform(0.3,0.6))
-    network.add_edge(c12, mr4, 35, rnd.uniform(0.3,0.6))
+    network.add_edge(c7, mr3, 25, 0.1)
+    network.add_edge(c7, mr2, 55, 0.1)
+    network.add_edge(c8, mr1, 35, 0.1)
+    network.add_edge(c8, mr2, 55, 0.1)
+    network.add_edge(c9, mr5, 45, 0.1)
+    network.add_edge(c10, mr1, 35, 0.1)
+    network.add_edge(c10, mr5, 45, 0.1)
+    network.add_edge(c11, mr1, 35, 0.1)
+    network.add_edge(c11, mr4, 35, 0.1)
+    network.add_edge(c12, mr6, 65, 0.1)
+    network.add_edge(c12, mr4, 35, 0.1)
 
     return network
     

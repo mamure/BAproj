@@ -1,7 +1,7 @@
 import time
 
 class Packet:
-    def __init__(self, packet_id, src_id, dest_id, size, packet_type="DATA", priority=1):
+    def __init__(self, packet_id, src_id, dest_id, size, packet_type="DATA"):
         """
         Args:
             src (int)

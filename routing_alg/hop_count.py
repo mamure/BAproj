@@ -21,6 +21,9 @@ def shortest_path(graph, src_id, dest_id):
         
         for neighbor_id in current_node.neighbors:
             if neighbor_id not in visited:
+                neighbor_node = graph.nodes[neighbor_id]
+                if neighbor_node.type == "C" and neighbor_id != dest_id:
+                    continue
                 queue.append((graph.nodes[neighbor_id], path + [neighbor_id]))
 
     return None

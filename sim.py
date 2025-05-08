@@ -1,15 +1,16 @@
 import matplotlib.pyplot as plt
 from main import MeshNetworkSimulator
+from network import reset_id_managers
 
-def run_all_sims():
-    loads = [25, 50, 100, 150, 200]
+def run_all_experiments():
+    loads = [5, 10, 20, 25, 40, 50]
     
     hop_count_results = {'er': [], 'throughput': [], 'delay': []}
     wcett_results = {'er': [], 'throughput': [], 'delay': []}
     wcett_lb_results = {'er': [], 'throughput': [], 'delay': []}
     
     # Hop Count
-    sim = MeshNetworkSimulator()
+    sim = MeshNetworkSimulator(0)
     sim.hop_count_sim()
     for load in loads:
         print(f'\nHop Count Sim with load {load} pkt/s')
@@ -19,7 +20,7 @@ def run_all_sims():
         hop_count_results['delay'].append(delay)
     
     # WCETT
-    sim = MeshNetworkSimulator()
+    sim = MeshNetworkSimulator(0)
     sim.wcett_sim()
     for load in loads:
         print(f'\nWCETT Sim with load {load} pkt/s')
@@ -29,7 +30,7 @@ def run_all_sims():
         wcett_results['delay'].append(delay)
     
     # WCETT-LB
-    sim = MeshNetworkSimulator()
+    sim = MeshNetworkSimulator(0)
     sim.wcett_lb_sim()
     for load in loads:
         print(f'\nWCETT-LB Sim with load {load} pkt/s')

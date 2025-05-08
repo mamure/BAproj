@@ -17,13 +17,13 @@ def visualize_network(network):
 
     # Add edges
     for edge_id, edge in network.edges.items():
-        net.add_edge(edge.src.id, edge.dst.id, title=f"Bandwidth: {edge.bandwidth:.2f} Mbps, Loss Rate: {edge.loss_rate:.2f}")
+        net.add_edge(edge.src.id, edge.dest.id, title=f"Bandwidth: {edge.bandwidth:.2f} Mbps, Loss Rate: {edge.loss_rate:.2f}")
     
     # Ensure output directory exists
     output_dir = "html_vis"
     os.makedirs(output_dir, exist_ok=True)
     
     # Save the visualization
-    output_path = os.path.join(output_dir, "complex_graph.html")
+    output_path = os.path.join(output_dir, "advanced_graph.html")
     net.write_html(output_path)
     print(f"Network graph saved at '{output_path}'. Open it in your browser to view.")

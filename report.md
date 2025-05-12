@@ -93,6 +93,9 @@ I have now implemented it so that the packets per second are distributed evenly 
 
 I have also written extensively about the simulation implementation in the report, so it should now be clearer how the network and routing algorithms are tested.
 ## Week 14 (5-11 may)
+I have made some progress on the report by expanding various sections and writing a draft of the introduction.
+
+On the coding side, I haven’t made significant changes yet. I’ve implemented a few minor changes.
 ## Week 15 (12-18 may)
 ## Week 16 (19-25 may)
 ## Week 17 (26 may-1 jun)

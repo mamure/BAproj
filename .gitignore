@@ -2,6 +2,8 @@
 __pycache__/
 lib/
 test/
+small_results/
+big_results/
 
 # Ignore log files
 *.log

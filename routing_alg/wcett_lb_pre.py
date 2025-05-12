@@ -22,7 +22,7 @@ def get_min_ett(nw):
     
     for edge in nw.edges.values():
         if edge.active:
-            ett = wcett.calculate_ett(edge, 1024)
+            ett = wcett.compute_ett(edge, 1024)
             min_ett = min(min_ett, ett)
     
     result = min_ett if min_ett != float('inf') else 1.0

@@ -1,7 +1,7 @@
 import network as nt
 from pyvis.network import Network as pyNT
 import os
-import routing
+import routing_alg.routing as routing
 
 def initialize_simple_network():
     """

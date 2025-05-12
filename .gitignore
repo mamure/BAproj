@@ -35,3 +35,5 @@ coverage/
 
 complex_graph.html
 simple_graph.html
+
+*.png

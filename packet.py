@@ -16,7 +16,6 @@ class Packet:
         self.type = packet_type
         self.time = time.time()
         self.route_taken = []
-        self.priority = priority # 1=low, 3=high
         self.created_time = time.time()
         self.delivered_time = None
         

@@ -3,8 +3,8 @@ import random as rnd
 import time
 import queue
 from packet import Packet
-import routing_alg.wcett_lb as wcett_lb
-import routing_alg.wcett_lb_adv as wcett_lb_adv
+import routing_alg.wcett_lb_post as wcett_lb_post
+import routing_alg.wcett_lb_pre as wcett_lb_pre
 import routing
 
 NODE_ID_COUNTER = 0
@@ -109,16 +109,16 @@ class Node:
         while self.running:
             try:
                 # print(f"[DEBUG network] Node {self.id}: enter monitor_congestion; queue_size={self.queue.qsize()}")
-                wcett_lb.update_congest_status(self, self.network)
+                wcett_lb_post.update_congest_status(self, self.network)
                 # print(f"[DEBUG network] Node {self.id}: congest_status={self.congest_status}")
                 self.load = self.queue.qsize()
 
                 for dest_id in self.routing_table.keys():
                     routing_algorithm = self.network.routing_algorithm
-                    if routing_algorithm and isinstance(routing_algorithm, routing.WCETT_LBRouting):
-                        switched, paths = wcett_lb.update_path(self, self.network, dest_id, routing_algorithm)
-                    elif routing_algorithm and isinstance(routing_algorithm, routing.WCETT_LB_ADVRouting):
-                        switched, paths = wcett_lb_adv.update_path(self, self.network, dest_id, routing_algorithm)
+                    if routing_algorithm and isinstance(routing_algorithm, routing.WCETT_LB_POSTRouting):
+                        switched, paths = wcett_lb_post.update_path(self, self.network, dest_id, routing_algorithm)
+                    elif routing_algorithm and isinstance(routing_algorithm, routing.WCETT_LB_PRERouting):
+                        switched, paths = wcett_lb_pre.update_path(self, self.network, dest_id, routing_algorithm)
                         # print(f"[DEBUG network] Node {self.id}: wcett_lb_adv.update_path to {dest_id} → switched={switched}, paths={paths}")
                 time.sleep(1)
             except Exception as e:

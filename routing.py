@@ -1,6 +1,7 @@
 from routing_alg import hop_count as hc
 from routing_alg import wcett
-from routing_alg import wcett_lb
+from routing_alg import wcett_lb_post
+from routing_alg import wcett_lb_pre
 
 def find_all_paths(nw, src, dest, path=None, visited=None, max_depth=10):
     if path is None:
@@ -97,7 +98,7 @@ class WCETTRouting(RoutingProtocol):
             return best_path[1]
         return None
 
-class WCETT_LBRouting(RoutingProtocol):
+class WCETT_LB_POSTRouting(RoutingProtocol):
     def __init__(self, packet_sz=1024, beta=0.5):
         self.packet_sz = packet_sz
         self.beta = beta
@@ -121,14 +122,14 @@ class WCETT_LBRouting(RoutingProtocol):
                     edges.append(edge)
                     
             if edges:
-                metric, congested_count = wcett_lb.compute_wcett_lb(edges, self.packet_sz, nw, path)
+                metric, congested_count = wcett_lb_post.compute_wcett_lb(edges, self.packet_sz, nw, path)
                 path_metrics.append((path, metric, congested_count))
 
         if not path_metrics:
             return None
         
         path_metrics.sort(key=lambda x: (
-            1 if x[2] > wcett_lb.LOAD_BALANCE_THRESHOLD else 0, # weights in path if there are more than allowed congested nodes
+            1 if x[2] > wcett_lb_post.LOAD_BALANCE_THRESHOLD else 0, # weights in path if there are more than allowed congested nodes
             x[2], # congested nodes
             x[1] # weights in path
         ))
@@ -177,7 +178,7 @@ class WCETT_LBRouting(RoutingProtocol):
                     edges.append(edge)
             
             if edges:
-                metric, _ = wcett_lb.compute_wcett_lb(edges, self.packet_sz, nw, path)
+                metric, _ = wcett_lb_post.compute_wcett_lb(edges, self.packet_sz, nw, path)
                 path_metrics.append((path, metric))
         
         if not path_metrics:
@@ -186,7 +187,7 @@ class WCETT_LBRouting(RoutingProtocol):
         path_metrics.sort(key=lambda x: x[1])
         return path_metrics[0][0]
 
-class WCETT_LB_ADVRouting(RoutingProtocol):
+class WCETT_LB_PRERouting(RoutingProtocol):
     def __init__(self, packet_sz=1024, beta=0.5):
         self.packet_sz = packet_sz
         self.beta = beta
@@ -212,7 +213,7 @@ class WCETT_LB_ADVRouting(RoutingProtocol):
                     edges.append(edge)
                     
             if edges:
-                metric, congested_count = wcett_lb.compute_wcett_lb(edges, self.packet_sz, nw, path)
+                metric, congested_count = wcett_lb_post.compute_wcett_lb(edges, self.packet_sz, nw, path)
                 path_metrics.append((path, metric, congested_count))
 
         if not path_metrics:
@@ -263,7 +264,7 @@ class WCETT_LB_ADVRouting(RoutingProtocol):
                     edges.append(edge)
             
             if edges:
-                metric, _ = wcett_lb.compute_wcett_lb(edges, self.packet_sz, nw, path)
+                metric, _ = wcett_lb_pre.compute_wcett_lb(edges, self.packet_sz, nw, path)
                 path_metrics.append((path, metric))
         
         if not path_metrics:

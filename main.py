@@ -16,10 +16,10 @@ class MeshNetworkSimulator:
         elif type == 1:
             self.network = advanced_network.initialize_network()
         
-    def simulate_traffic(self, duration=120, load=40):
+    def simulate_traffic(self, duration=120, load=20):
         """
         Args:
-            duration (int, optional): Duration of simulation in seconds. Defaults to 30.
+            duration (int, optional): Duration of simulation in seconds. Defaults to 120.
             load (int, optional): packets per second. Defaults to 50.
         """
         self.network.start_network()
@@ -121,7 +121,7 @@ class MeshNetworkSimulator:
             print(f'Total packets: {total_packets}')
             print(f'Successful packets: {packets_sent}')
             print(f'Error rate: {error_rate:.1f}%')
-            print(f'throughput: {throughput:.1f} kb/s')
+            print(f'throughput: {throughput:.1f} Kbps')
             print(f'avg_delay: {avg_delay:.2f} seconds')
             
             return error_rate, throughput, avg_delay
@@ -172,9 +172,9 @@ class MeshNetworkSimulator:
         logging.info(f"WCETT routing tables created for {len(self.network.nodes)} nodes")
         return True
     
-    def wcett_lb_sim(self):
+    def wcett_lb_post_sim(self):
         """
-        Define all routing tables using WCETT-LB metric algorithm. 
+        Define all routing tables using WCETT-LB Post metric algorithm. 
         The destination should be the IGW nodes' id.
         """
         igw_nodes = [node_id for node_id, node in self.network.nodes.items() 
@@ -183,24 +183,24 @@ class MeshNetworkSimulator:
             logging.error("NO IGW in network")
             return False
         
-        wcett_lb_algorithm = routing.WCETT_LBRouting()
-        self.network.routing_algorithm = wcett_lb_algorithm
+        wcett_lb_post_algorithm = routing.WCETT_LB_POSTRouting()
+        self.network.routing_algorithm = wcett_lb_post_algorithm
         
         for node_id, node in self.network.nodes.items():
             node.routing_table = {}  # Clear existing routing table
             for igw_id in igw_nodes:
-                next_hop = wcett_lb_algorithm.compute_routing_tb(self.network, node_id, igw_id)
+                next_hop = wcett_lb_post_algorithm.compute_routing_tb(self.network, node_id, igw_id)
                 if next_hop is not None:
                     node.routing_table[igw_id] = next_hop
         
-        print(f"Is WCETT-LB Routing Algorithm: {isinstance(self.network.routing_algorithm, routing.WCETT_LBRouting)}")
+        print(f"Is WCETT-LB Post Routing Algorithm: {isinstance(self.network.routing_algorithm, routing.WCETT_LB_POSTRouting)}")
         
-        logging.info(f"WCETT-LB routing tables created for {len(self.network.nodes)} nodes")
+        logging.info(f"WCETT-LB Post routing tables created for {len(self.network.nodes)} nodes")
         return True
     
-    def wcett_lb_adv_sim(self):
+    def wcett_lb_pre_sim(self):
         """
-        Define all routing tables using WCETT-LB Advanced metric algorithm. 
+        Define all routing tables using WCETT-LB Pre metric algorithm. 
         The destination should be the IGW nodes' id.
         """
         igw_nodes = [node_id for node_id, node in self.network.nodes.items() 
@@ -209,40 +209,40 @@ class MeshNetworkSimulator:
             logging.error("NO IGW in network")
             return False
         
-        wcett_lb_adv_algorithm = routing.WCETT_LB_ADVRouting()
-        self.network.routing_algorithm = wcett_lb_adv_algorithm
+        wcett_lb_pre_algorithm = routing.WCETT_LB_PRERouting()
+        self.network.routing_algorithm = wcett_lb_pre_algorithm
         
         for node_id, node in self.network.nodes.items():
             node.routing_table = {}  # Clear existing routing table
             for igw_id in igw_nodes:
-                next_hop = wcett_lb_adv_algorithm.compute_routing_tb(self.network, node_id, igw_id)
+                next_hop = wcett_lb_pre_algorithm.compute_routing_tb(self.network, node_id, igw_id)
                 if next_hop is not None:
                     node.routing_table[igw_id] = next_hop
         
-        print(f"Is WCETT-LB Advanced Routing Algorithm: {isinstance(self.network.routing_algorithm, routing.WCETT_LB_ADVRouting)}")
+        print(f"Is WCETT-LB Pre Routing Algorithm: {isinstance(self.network.routing_algorithm, routing.WCETT_LB_PRERouting)}")
         
         # Print path cache for debugging
-        if hasattr(wcett_lb_adv_algorithm, 'path_cache'):
-            print("WCETT-LB Advanced initial paths:")
-            for (src, dest), path in wcett_lb_adv_algorithm.path_cache.items():
+        if hasattr(wcett_lb_pre_algorithm, 'path_cache'):
+            print("WCETT-LB Pre initial paths:")
+            for (src, dest), path in wcett_lb_pre_algorithm.path_cache.items():
                 if len(path) > 0:
                     print(f"  {src} → {dest}: {path}")
         
-        logging.info(f"WCETT-LB Advanced routing tables created for {len(self.network.nodes)} nodes")
+        logging.info(f"WCETT-LB Pre routing tables created for {len(self.network.nodes)} nodes")
         return True
 
 def main():
     """_summary_
     """
     logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-    sim = MeshNetworkSimulator(0)
+    sim = MeshNetworkSimulator(1)
     
     while True:
         print("\nSelect an option:")
         print("1. Run Hop Count")
         print("2. Run WCETT")
-        print("3. Run WCETT-LB")
-        print("4. Run WCETT-LB Advanced")
+        print("3. Run WCETT-LB Post")
+        print("4. Run WCETT-LB Pre")
         print("5. Exit")
         
         choice = input("Enter: ")
@@ -262,15 +262,15 @@ def main():
                 print("Failed")
             break
         elif choice == "3":
-            # Run simulation with WCETT-LB from routing
-            if sim.wcett_lb_sim():
+            # Run simulation with WCETT-LB Post from routing
+            if sim.wcett_lb_post_sim():
                 sim.simulate_traffic()
             else:
                 print("Failed")
             break
         elif choice == "4":
-            # Run simulation with WCETT-LB Advanced from routing
-            if sim.wcett_lb_adv_sim():
+            # Run simulation with WCETT-LB Pre from routing
+            if sim.wcett_lb_pre_sim():
                 sim.simulate_traffic()
             else:
                 print("Failed")

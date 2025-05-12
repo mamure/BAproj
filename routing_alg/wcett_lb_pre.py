@@ -1,4 +1,4 @@
-from routing_alg import wcett, wcett_lb
+from routing_alg import wcett, wcett_lb_post
 
 LOAD_BALANCE_THRESHOLD = 2
 
@@ -26,7 +26,7 @@ def get_min_ett(nw):
             min_ett = min(min_ett, ett)
     
     result = min_ett if min_ett != float('inf') else 1.0
-    print(f"[DEBUG wcett_lb_adv] get_min_ett -> {result}")
+    print(f"[DEBUG wcett_lb_pre] get_min_ett -> {result}")
     return result
         
 def compute_wcett_lb(edges, packet_sz, nw, path):
@@ -77,7 +77,7 @@ def get_congested_node_count(nw, path):
     count = 0
     for node_id in path[1:-1]:
         node = nw.nodes[node_id]
-        wcett_lb.update_congest_status(node, nw)
+        wcett_lb_post.update_congest_status(node, nw)
         # print(f"[DEBUG wcett_lb_adv] get_congested_node_count: node={node_id}, congested={node.congest_status}")
         if node.congest_status:
             count += 1
@@ -101,7 +101,7 @@ def update_path(node, nw, dest_id, routing_alg):
             routing_alg.path_cache[(node.id, dest_id)] = new_path
             if len(new_path) >= 2:
                 node.routing_table[dest_id] = new_path[1]
-                print(f"[DEBUG wcett_lb_adv] switched path for node {node.id}: {current_path} → {new_path}")
+                print(f"[DEBUG wcett_lb_pre] switched path for node {node.id}: {current_path} → {new_path}")
                 return True, (current_path, new_path)
         else:
             print(f"⚠️ Node {node.id} could not find alternative path to {dest_id} that avoids {congested_nodes}")

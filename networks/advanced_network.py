@@ -1,6 +1,5 @@
 import network as nt
 import visualiser as vis
-import random as rnd
 
 def initialize_network():
     """
@@ -34,35 +33,35 @@ def initialize_network():
     c16 = network.create_node("C")
     c17 = network.create_node("C")
     
-    network.add_edge(igw0, igw1, 150, 0.1)
+    network.add_edge(igw0, igw1, 200, 0.1)
     
     network.add_edge(igw0, mr2, 60, 0.1)
-    network.add_edge(igw0, mr3, 40, 0.1)
+    network.add_edge(igw0, mr3, 120, 0.1)
     network.add_edge(igw1, mr3, 30, 0.1)
     network.add_edge(igw1, mr4, 20, 0.1)
-    network.add_edge(igw1, mr5, 60, 0.1)
+    network.add_edge(igw1, mr5, 180, 0.1)
     
     network.add_edge(mr2, mr3, 30, 0.1)
-    network.add_edge(mr2, mr6, 40, 0.1)
+    network.add_edge(mr2, mr6, 160, 0.1)
     network.add_edge(mr3, mr4, 40, 0.1)
     network.add_edge(mr3, mr6, 50, 0.1)
     network.add_edge(mr4, mr5, 30, 0.1)
-    network.add_edge(mr4, mr7, 30, 0.1)
+    network.add_edge(mr4, mr7, 120, 0.1)
     network.add_edge(mr4, mr8, 30, 0.1)
-    network.add_edge(mr5, mr9, 20, 0.1)
+    network.add_edge(mr5, mr9, 150, 0.1)
     network.add_edge(mr6, mr7, 50, 0.1)
-    network.add_edge(mr6, mr10, 20, 0.1)
+    network.add_edge(mr6, mr10, 140, 0.1)
     network.add_edge(mr7, mr8, 50, 0.1)
     network.add_edge(mr8, mr10, 20, 0.1)
-    network.add_edge(mr8, mr11, 30, 0.1)
+    network.add_edge(mr8, mr11, 130, 0.1)
     network.add_edge(mr9, mr11, 50, 0.1)
     
     network.add_edge(c12, mr2, 20, 0.1)
     network.add_edge(c12, mr6, 30, 0.1)
     network.add_edge(c13, mr6, 30, 0.1)
-    network.add_edge(c13, mr10, 40, 0.1)
+    network.add_edge(c13, mr10, 140, 0.1)
     network.add_edge(c14, mr10, 40, 0.1)
-    network.add_edge(c14, mr7, 20, 0.1)
+    network.add_edge(c14, mr7, 110, 0.1)
     network.add_edge(c14, mr8, 30, 0.1)
     network.add_edge(c15, mr10, 30, 0.1)
     network.add_edge(c15, mr8, 50, 0.1)
@@ -70,7 +69,7 @@ def initialize_network():
     network.add_edge(c16, mr11, 30, 0.1)
     network.add_edge(c16, mr9, 40, 0.1)
     network.add_edge(c17, mr9, 50, 0.1)
-    network.add_edge(c17, mr5, 30, 0.1)
+    network.add_edge(c17, mr5, 130, 0.1)
 
     return network
     

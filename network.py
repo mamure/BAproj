@@ -5,7 +5,7 @@ import queue
 from packet import Packet
 import routing_alg.wcett_lb_post as wcett_lb_post
 import routing_alg.wcett_lb_pre as wcett_lb_pre
-import routing
+import routing_alg.routing as routing
 
 NODE_ID_COUNTER = 0
 EDGE_ID_COUNTER = 0
@@ -119,7 +119,6 @@ class Node:
                         switched, paths = wcett_lb_post.update_path(self, self.network, dest_id, routing_algorithm)
                     elif routing_algorithm and isinstance(routing_algorithm, routing.WCETT_LB_PRERouting):
                         switched, paths = wcett_lb_pre.update_path(self, self.network, dest_id, routing_algorithm)
-                        # print(f"[DEBUG network] Node {self.id}: wcett_lb_adv.update_path to {dest_id} → switched={switched}, paths={paths}")
                 time.sleep(1)
             except Exception as e:
                 if self.running:
@@ -134,7 +133,10 @@ class Node:
                 packet = message['packet']
                 src = message['sender']
                 self.received_packets.append(packet)
-                time.sleep(QUEUE_PROCESS_TIME)
+                if self.type == "IGW":
+                    time.sleep(QUEUE_PROCESS_TIME * 0.1)  # IGWs are faster but not instant
+                else:
+                    time.sleep(QUEUE_PROCESS_TIME)
                 if packet.type == 'DATA':
                     self.send_ack(packet, src)
                 self.queue.task_done()
@@ -166,7 +168,10 @@ class Node:
             bool: True if packet was accepted, False if dropped
         """
         try:
-            if self.congest_status:
+            if self.type == "IGW" or not self.congest_status:
+                self.queue.put({'packet': packet, 'sender': src})
+                return True
+            else:
                 print(f"[DEBUG network] Node {self.id}: dropping {packet.id} (congested)")
                 self.dropped_packets.append({
                     'packet_id': packet.id,
@@ -176,9 +181,6 @@ class Node:
                     'reason': 'buffer_full'
                 })
                 return False
-            else:
-                self.queue.put({'packet': packet, 'sender': src})
-                return True
         except Exception as e:
             print(f"Error receiving message at Node {self.id}: {e}")
             return False

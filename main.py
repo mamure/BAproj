@@ -1,26 +1,47 @@
-import complex_network
-import advanced_network
-import routing
+from networks import complex_network
+from networks import advanced_network
+import routing_alg.routing as routing
 import logging
 import time
 import random as rnd
 import threading
+import argparse
 from network import reset_id_managers
 
 class MeshNetworkSimulator:
-    def __init__(self, type):
+    """
+    Mesh Network Simulator for evaluating routing algorithms in wireless mesh networks.
+    
+    This class provides functionality to simulate network traffic using different routing
+    algorithms and network topologies.
+    """
+    def __init__(self, topology_type=0):
+        """
+        Initialize the simulator with a specified network topology.
+
+        Args:
+            topology_type (int, optional): The network topology to use. 
+                0 = complex network, 1 = advanced network. Defaults to 0.
+        """
         reset_id_managers()
         
-        if type == 0:
+        if topology_type == 0:
             self.network = complex_network.initialize_network()
-        elif type == 1:
+            self.topology_name = "small"
+        elif topology_type == 1:
+            self.topology_name = "big"
             self.network = advanced_network.initialize_network()
+        else:
+            raise ValueError("Invalid topology type. Must be 0 (small) or 1 (big)")
         
-    def simulate_traffic(self, duration=120, load=20):
+    def simulate_traffic(self, duration=30, load=50):
         """
         Args:
-            duration (int, optional): Duration of simulation in seconds. Defaults to 120.
-            load (int, optional): packets per second. Defaults to 50.
+            duration (int, optional): Duration of simulation in seconds.
+            load (int, optional): packets per second.
+        
+        Returns:
+            tuple: Tuple containing (error_rate, throughput, avg_delay)
         """
         self.network.start_network()
         
@@ -38,7 +59,8 @@ class MeshNetworkSimulator:
             if node.type == "IGW"]
         
         def send_packet_thread(packet_id, src_id, dest_id):
-            """_summary_
+            """
+            Thread function to send a packet through the network.
 
             Args:
                 packet_id (_type_): _description_
@@ -51,7 +73,7 @@ class MeshNetworkSimulator:
         threads = []
         active_threads = []
         max_concurrent_threads = 16
-        cleanup = 10
+        cleanup = 5
         
         packet_interval = 1.0 / load
         next_packet_time = start_time
@@ -116,13 +138,13 @@ class MeshNetworkSimulator:
             throughput = (total_bytes * 8 / 1000) / elapsed if elapsed > 0 else 0
             avg_delay = (total_delay / packets_sent) if packets_sent > 0 else 0
             
-            print("\n=== Simulation Results ===")
+            print('\n=== Simulation Results ===')
             print(f'Duration: {elapsed:.1f} seconds')
             print(f'Total packets: {total_packets}')
             print(f'Successful packets: {packets_sent}')
             print(f'Error rate: {error_rate:.1f}%')
-            print(f'throughput: {throughput:.1f} Kbps')
-            print(f'avg_delay: {avg_delay:.2f} seconds')
+            print(f'Throughput: {throughput:.1f} Kbps')
+            print(f'Average delay: {avg_delay:.2f} seconds')
             
             return error_rate, throughput, avg_delay
     
@@ -130,6 +152,9 @@ class MeshNetworkSimulator:
         """
         Define all routing tables using hop count metric algorithm. 
         The destination should be the IGW nodes' id.
+        
+        Returns:
+            bool: True if routing tables were successfully created, False otherwise.
         """
         igw_nodes = [node_id for node_id, node in self.network.nodes.items() 
                 if node.type == "IGW"]
@@ -153,6 +178,9 @@ class MeshNetworkSimulator:
         """
         Define all routing tables using WCETT metric algorithm. 
         The destination should be the IGW nodes' id.
+        
+        Returns:
+            bool: True if routing tables were successfully created, False otherwise.
         """
         igw_nodes = [node_id for node_id, node in self.network.nodes.items() 
                 if node.type == "IGW"]
@@ -176,6 +204,9 @@ class MeshNetworkSimulator:
         """
         Define all routing tables using WCETT-LB Post metric algorithm. 
         The destination should be the IGW nodes' id.
+        
+        Returns:
+            bool: True if routing tables were successfully created, False otherwise.
         """
         igw_nodes = [node_id for node_id, node in self.network.nodes.items() 
                 if node.type == "IGW"]
@@ -202,6 +233,9 @@ class MeshNetworkSimulator:
         """
         Define all routing tables using WCETT-LB Pre metric algorithm. 
         The destination should be the IGW nodes' id.
+        
+        Returns:
+            bool: True if routing tables were successfully created, False otherwise.
         """
         igw_nodes = [node_id for node_id, node in self.network.nodes.items() 
                 if node.type == "IGW"]
@@ -232,10 +266,22 @@ class MeshNetworkSimulator:
         return True
 
 def main():
-    """_summary_
     """
+    Main entry point of the program.
+    Parses command line arguments and runs the simulation with specified parameters.
+    """
+    parser = argparse.ArgumentParser(description='Wireless Mesh Network Simulator')
+    
+    parser.add_argument('-t', '--topology', type=int, choices=[0, 1], default=0,
+                        help='Network topology: 0=small, 1=big (default: 0)')
+    parser.add_argument('-d', '--duration', type=int, default=120,
+                        help='Simulation duration in seconds (default: 120)')
+    parser.add_argument('-l', '--load', type=float, default=20,
+                        help='Network load in packets per second (default: 20)')
+    
+    args = parser.parse_args()
     logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-    sim = MeshNetworkSimulator(1)
+    sim = MeshNetworkSimulator(args.topology)
     
     while True:
         print("\nSelect an option:")
@@ -250,28 +296,28 @@ def main():
         if choice == "1":
             # Run simulation with Hop Count from routing
             if sim.hop_count_sim():
-                sim.simulate_traffic()
+                sim.simulate_traffic(duration=args.duration, load=args.load)
             else:
                 print("Failed")
             break
         elif choice == "2":
             # Run simulation with WCETT from routing
             if sim.wcett_sim():
-                sim.simulate_traffic()
+                sim.simulate_traffic(duration=args.duration, load=args.load)
             else:
                 print("Failed")
             break
         elif choice == "3":
             # Run simulation with WCETT-LB Post from routing
             if sim.wcett_lb_post_sim():
-                sim.simulate_traffic()
+                sim.simulate_traffic(duration=args.duration, load=args.load)
             else:
                 print("Failed")
             break
         elif choice == "4":
             # Run simulation with WCETT-LB Pre from routing
             if sim.wcett_lb_pre_sim():
-                sim.simulate_traffic()
+                sim.simulate_traffic(duration=args.duration, load=args.load)
             else:
                 print("Failed")
             break

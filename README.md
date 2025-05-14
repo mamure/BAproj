@@ -41,12 +41,12 @@ python sim.py
 #### Specify a different base load:
 Base load of 10 generates test loads of [10, 15, 25, 35, 40] packets/second:
 ```
-python sim.py --base-load 10
+python sim.py -b 10
 ```
 
 #### Run a specific algorithm with custom settings:
 ```
-python sim.py --algorithm wcett_lb_post --base-load 15 --duration 120
+python sim.py -a wcett_lb_post -b 15 -d 120
 ```
 
 #### Run simulations without displaying plots (just save them):
@@ -54,14 +54,14 @@ python sim.py --algorithm wcett_lb_post --base-load 15 --duration 120
 python sim.py --no-show
 ```
 
-#### Change network topology (0=complex, 1=advanced):
+#### Change network topology (0=small, 1=big):
 ```
-python sim.py --topology 0
+python sim.py -t 0
 ```
 
 #### Full help information:
 ```
-python sim.py --help
+python sim.py -h
 ```
 
 ### Running from main.py (interactive mode)
@@ -73,7 +73,7 @@ python main.py
 
 #### Run with command line arguments:
 ```
-python main.py --topology 0 --duration 60 --load 25 --routing wcett_lb_pre
+python main.py -t 0 -d 60 -l 25
 ```
 
 ## Command Line Arguments
@@ -108,7 +108,7 @@ The simulator supports two network topologies:
 ## Results
 
 Simulation results are saved to:
-- A directory named with timestamp and topology information
+- A directory named with topology information
 - Includes JSON data files with detailed simulation results
 - Generates comparison plots for error rate, throughput, and end-to-end delay
 

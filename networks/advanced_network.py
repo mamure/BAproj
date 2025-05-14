@@ -4,9 +4,9 @@ import visualiser as vis
 def initialize_network():
     """
     Creates a network with:
-    - x Internet Gateway nodes (IGWs)
-    - y Mesh Routers (MRs)
-    - z Clients
+    - Internet Gateway nodes (IGWs)
+    - Mesh Routers (MRs)
+    - Clients (C)
     The routers are interconnected in a mesh-like manner, and clients are attached to routers.
     
     Returns:

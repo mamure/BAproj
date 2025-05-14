@@ -26,7 +26,7 @@ The simulator measures and compares:
 
 2. Install dependencies:
    ```
-   pip install matplotlib numpy
+   pip install -r requirements.txt
    ```
 
 ## Usage Examples

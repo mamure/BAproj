@@ -7,6 +7,9 @@ import random as rnd
 import threading
 import argparse
 from network import reset_id_managers
+from log_config import get_logger, setup_logging
+
+logger = get_logger("main")
 
 class MeshNetworkSimulator:
     """
@@ -111,12 +114,12 @@ class MeshNetworkSimulator:
                 
                 if total_packets % 200 == 0:
                     elapsed = time.time() - start_time
-                    print(f"Progress: {total_packets} packets, {elapsed:.1f}s elapsed")
+                    logger.info(f"Progress: {total_packets} packets, {elapsed:.1f}s elapsed")
 
         except KeyboardInterrupt:
-            print("Simulation interrupted")
+            logger.info("Simulation interrupted")
         finally:
-            print("Waiting for threads to complete...")
+            logger.info("Waiting for threads to complete...")
             for t in threads:
                 t.join(timeout=0.5)
             
@@ -138,13 +141,13 @@ class MeshNetworkSimulator:
             throughput = (total_bytes * 8 / 1000) / elapsed if elapsed > 0 else 0
             avg_delay = (total_delay / packets_sent) if packets_sent > 0 else 0
             
-            print('\n=== Simulation Results ===')
-            print(f'Duration: {elapsed:.1f} seconds')
-            print(f'Total packets: {total_packets}')
-            print(f'Successful packets: {packets_sent}')
-            print(f'Error rate: {error_rate:.1f}%')
-            print(f'Throughput: {throughput:.1f} Kbps')
-            print(f'Average delay: {avg_delay:.2f} seconds')
+            logger.info('\n=== Simulation Results ===')
+            logger.info(f'Duration: {elapsed:.1f} seconds')
+            logger.info(f'Total packets: {total_packets}')
+            logger.info(f'Successful packets: {packets_sent}')
+            logger.info(f'Error rate: {error_rate:.1f}%')
+            logger.info(f'Throughput: {throughput:.1f} Kbps')
+            logger.info(f'Average delay: {avg_delay:.2f} seconds')
             
             return error_rate, throughput, avg_delay
     
@@ -165,13 +168,13 @@ class MeshNetworkSimulator:
         self.network.routing_algorithm = None
         hop_count_alg = routing.HopCountRouting()
 
-        print("\n Hop count initial next hop:")
+        logger.info("Hop count initial next hop:")
         for node_id, node in self.network.nodes.items():
             for igw_id in igw_nodes:
                 next_hop = hop_count_alg.compute_routing_tb(self.network, node_id, igw_id)
                 if next_hop is not None:
                     node.routing_table[igw_id] = next_hop
-                    print(f"  {node.id} → {igw_id}: {node.routing_table[igw_id]}")
+                    logger.info(f"{node.id} → {igw_id}: {node.routing_table[igw_id]}")
         
         logging.info(f"Hop count routing tables created for {len(self.network.nodes)} nodes")
                     
@@ -194,13 +197,13 @@ class MeshNetworkSimulator:
         self.network.routing_algorithm = None
         wcett_alg = routing.WCETTRouting()
         
-        print("\nWCETT initial next hop:")
+        logger.info("WCETT initial next hop:")
         for node_id, node in self.network.nodes.items():
             for igw_id in igw_nodes:
                 next_hop = wcett_alg.compute_routing_tb(self.network, node_id, igw_id)
                 if next_hop is not None:
                     node.routing_table[igw_id] = next_hop
-                    print(f"  {node.id} → {igw_id}: {node.routing_table[igw_id]}")
+                    logger.info(f"{node.id} → {igw_id}: {node.routing_table[igw_id]}")
         
         logging.info(f"WCETT routing tables created for {len(self.network.nodes)} nodes")
         
@@ -233,10 +236,10 @@ class MeshNetworkSimulator:
         logging.info(f"WCETT-LB Post routing tables created for {len(self.network.nodes)} nodes")
         
         if hasattr(wcett_lb_post_algorithm, 'path_cache'):
-            print("\nWCETT-LB Post initial paths:")
+            logger.info("\nWCETT-LB Post initial paths:")
             for (src, dest), path in wcett_lb_post_algorithm.path_cache.items():
                 if len(path) > 0:
-                    print(f"  {src} → {dest}: {path}")
+                    logger.info(f"{src} → {dest}: {path}")
 
         return True
     
@@ -267,10 +270,10 @@ class MeshNetworkSimulator:
         logging.info(f"WCETT-LB Pre routing tables created for {len(self.network.nodes)} nodes")
         
         if hasattr(wcett_lb_pre_algorithm, 'path_cache'):
-            print("\nWCETT-LB Pre initial paths:")
+            logger.info("\nWCETT-LB Pre initial paths:")
             for (src, dest), path in wcett_lb_pre_algorithm.path_cache.items():
                 if len(path) > 0:
-                    print(f"  {src} → {dest}: {path}")
+                    logger.info(f"{src} → {dest}: {path}")
         return True
 
 def main():
@@ -288,7 +291,7 @@ def main():
                         help='Network load in packets per second (default: 20)')
     
     args = parser.parse_args()
-    logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+    
     sim = MeshNetworkSimulator(args.topology)
     
     while True:
@@ -306,34 +309,35 @@ def main():
             if sim.hop_count_sim():
                 sim.simulate_traffic(duration=args.duration, load=args.load)
             else:
-                print("Failed")
+                logger.error("Failed")
             break
         elif choice == "2":
             # Run simulation with WCETT from routing
             if sim.wcett_sim():
                 sim.simulate_traffic(duration=args.duration, load=args.load)
             else:
-                print("Failed")
+                logger.error("Failed")
             break
         elif choice == "3":
             # Run simulation with WCETT-LB Post from routing
             if sim.wcett_lb_post_sim():
                 sim.simulate_traffic(duration=args.duration, load=args.load)
             else:
-                print("Failed")
+                logger.error("Failed")
             break
         elif choice == "4":
             # Run simulation with WCETT-LB Pre from routing
             if sim.wcett_lb_pre_sim():
                 sim.simulate_traffic(duration=args.duration, load=args.load)
             else:
-                print("Failed")
+                logger.error("Failed")
             break
         elif choice == "5":
-            print("Exiting...")
+            logger.info("Exiting...")
             break
         else:
-            print("Invalid choice.")
+            logger.error("Invalid choice.")
 
 if __name__ == "__main__":
+    setup_logging()
     main()

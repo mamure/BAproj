@@ -3,8 +3,12 @@ import argparse
 import os
 import json
 import time
+import logging
 from main import MeshNetworkSimulator
 from network import reset_id_managers
+from log_config import setup_logging, get_logger
+
+logger = get_logger("sim")
 
 def generate_load_series(base_load=5):
     """
@@ -60,52 +64,64 @@ def run_all_sims(base_load=5, duration=180, topology=0, save_dir=None, show_plot
     wcett_lb_pre_results = {'er': [], 'throughput': [], 'delay': []}
     
     # Run all simulations
-    print(f"\n=== Running simulations with {topology_name} topology, duration={duration}s ===")
-    print(f"Load series: {loads} packets/second")
+    logging.info(f"=== Running simulations with {topology_name} topology, duration={duration}s ===")
+    logging.info(f"Load series: {loads} packets/second")
     
     # Hop Count simulations
     reset_id_managers()
     sim = MeshNetworkSimulator(topology)
     sim.hop_count_sim()
     for load in loads:
-        print(f'\nHop Count Sim with load {load} pkt/s')
+        logger.info(f'Hop Count Sim with load {load} pkt/s')
         er, throughput, delay = sim.simulate_traffic(duration=duration, load=load)
         hop_count_results['er'].append(er)
         hop_count_results['throughput'].append(throughput)
         hop_count_results['delay'].append(delay)
+    
+    logger.debug("Cleaning up Hop-count simulator")
+    del sim # forcing python arbage collection
         
     # WCETT simulations
     reset_id_managers()
     sim = MeshNetworkSimulator(topology)
     sim.wcett_sim()
     for load in loads:
-        print(f'\nWCETT Sim with load {load} pkt/s')
+        logger.info(f'WCETT Sim with load {load} pkt/s')
         er, throughput, delay = sim.simulate_traffic(duration=duration, load=load)
         wcett_results['er'].append(er)
         wcett_results['throughput'].append(throughput)
         wcett_results['delay'].append(delay)
+    
+    logger.debug("Cleaning up WCETT simulator")
+    del sim
         
     # WCETT-LB Post simulations
     reset_id_managers()
     sim = MeshNetworkSimulator(topology)
     sim.wcett_lb_post_sim()
     for load in loads:
-        print(f'\nWCETT-LB Post Sim with load {load} pkt/s')
+        logger.info(f'WCETT-LB Post Sim with load {load} pkt/s')
         er, throughput, delay = sim.simulate_traffic(duration=duration, load=load)
         wcett_lb_post_results['er'].append(er)
         wcett_lb_post_results['throughput'].append(throughput)
         wcett_lb_post_results['delay'].append(delay)
+    
+    logger.debug("Cleaning up WCETT-LB Post simulator")
+    del sim
     
     # WCETT-LB Pre simulations
     reset_id_managers()
     sim = MeshNetworkSimulator(topology)
     sim.wcett_lb_pre_sim()
     for load in loads:
-        print(f'\nWCETT-LB Pre Sim with load {load} pkt/s')
+        logger.info(f'WCETT-LB Pre Sim with load {load} pkt/s')
         er, throughput, delay = sim.simulate_traffic(duration=duration, load=load)
         wcett_lb_pre_results['er'].append(er)
         wcett_lb_pre_results['throughput'].append(throughput)
         wcett_lb_pre_results['delay'].append(delay)
+
+    logger.debug("Cleaning up WCETT-LB Pre simulator")
+    del sim
     
     # Create plots
     # Plot Error Rate
@@ -171,13 +187,13 @@ def run_all_sims(base_load=5, duration=180, topology=0, save_dir=None, show_plot
     with open(os.path.join(results_dir, "simulation_results.json"), 'w') as f:
         json.dump(all_results, f, indent=2)
     
-    # Print summary
-    print("\n=== Simulation Complete ===")
-    print(f"Results saved to: {results_dir}")
-    print(f"Timestamp: {timestamp}")
-    print(f"Topology: {topology_name}")
-    print(f"Duration: {duration} seconds per simulation")
-    print(f"Loads tested: {loads}")
+    # logger.info summary
+    logger.info("=== Simulation Complete ===")
+    logger.info(f"Results saved to: {results_dir}")
+    logger.info(f"Timestamp: {timestamp}")
+    logger.info(f"Topology: {topology_name}")
+    logger.info(f"Duration: {duration} seconds per simulation")
+    logger.info(f"Loads tested: {loads}")
     
     return all_results
 
@@ -231,19 +247,19 @@ def run_single_algorithm_sim(algorithm, base_load=5, duration=180, topology=0, s
     }
     
     if algorithm not in algorithm_methods:
-        print(f"Unknown algorithm: {algorithm}")
-        print(f"Valid options are: {', '.join(algorithm_methods.keys())}")
+        logger.debug(f"Unknown algorithm: {algorithm}")
+        logger.debug(f"Valid options are: {', '.join(algorithm_methods.keys())}")
         return None
     
-    print(f"\n=== Running {algorithm_names[algorithm]} simulation with {topology_name} topology ===")
-    print(f"Load series: {loads} packets/second")
+    logger.info(f"=== Running {algorithm_names[algorithm]} simulation with {topology_name} topology ===")
+    logger.info(f"Load series: {loads} packets/second")
     
     reset_id_managers()
     sim = MeshNetworkSimulator(topology)
     algorithm_methods[algorithm](sim)
     
     for load in loads:
-        print(f"\n{algorithm_names[algorithm]} Sim with load {load} pkt/s")
+        logger.info(f"{algorithm_names[algorithm]} Sim with load {load} pkt/s")
         er, throughput, delay = sim.simulate_traffic(duration=duration, load=load)
         results['er'].append(er)
         results['throughput'].append(throughput)
@@ -292,9 +308,9 @@ def run_single_algorithm_sim(algorithm, base_load=5, duration=180, topology=0, s
     with open(os.path.join(results_dir, f"{algorithm}_results.json"), 'w') as f:
         json.dump(all_results, f, indent=2)
     
-    print(f"\n=== {algorithm_names[algorithm]} Simulation Complete ===")
-    print(f"Results saved to: {results_dir}")
-    print(f"Timestamp: {timestamp}")
+    logger.info(f"=== {algorithm_names[algorithm]} Simulation Complete ===")
+    logger.info(f"Results saved to: {results_dir}")
+    logger.info(f"Timestamp: {timestamp}")
     
     return results
 

@@ -2,10 +2,14 @@ import threading
 import random as rnd
 import time
 import queue
+import logging
 from packet import Packet
 import routing_alg.wcett_lb_post as wcett_lb_post
 import routing_alg.wcett_lb_pre as wcett_lb_pre
 import routing_alg.routing as routing
+from log_config import get_logger
+
+logger = get_logger("network")
 
 NODE_ID_COUNTER = 0
 EDGE_ID_COUNTER = 0
@@ -100,8 +104,10 @@ class Node:
         """Stops processing thread
         """
         self.running = False
-        self.thread.join()
-        self.congest_thread.join()
+        if hasattr(self, 'thread') and self.thread.is_alive():
+            self.thread.join(timeout=2.0)
+        if hasattr(self, 'congest_thread') and self.congest_thread.is_alive():
+            self.congest_thread.join(timeout=2.0)
     
     def monitor_congestion(self):
         """Monitor and manage node congestion status.
@@ -309,6 +315,7 @@ class Graph:
     
     def send_packet_graph(self, src_id, dest_id):
         if src_id not in self.nodes or dest_id not in self.nodes:
+            logger.error(f"Invalid node ID: {src_id} or {dest_id}")
             return {'success': False, 'reason': 'invalid_node_id'}
         
         src = self.nodes[src_id]

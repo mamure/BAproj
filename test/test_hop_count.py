@@ -35,3 +35,6 @@ class TestNetwork(unittest.TestCase):
         non_existing_id = 3
         path_a_non = shortest_path(self.graph, node_a.id, non_existing_id)
         self.assertEqual(path_a_non, [])
+
+if __name__ == '__main__':
+    unittest.main()

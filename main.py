@@ -34,7 +34,7 @@ class MeshNetworkSimulator:
         else:
             raise ValueError("Invalid topology type. Must be 0 (small) or 1 (big)")
         
-    def simulate_traffic(self, duration=30, load=50):
+    def simulate_traffic(self, duration=30, load=20):
         """
         Args:
             duration (int, optional): Duration of simulation in seconds.
@@ -164,14 +164,17 @@ class MeshNetworkSimulator:
         
         self.network.routing_algorithm = None
         hop_count_alg = routing.HopCountRouting()
-        
+
+        print("\n Hop count initial next hop:")
         for node_id, node in self.network.nodes.items():
             for igw_id in igw_nodes:
                 next_hop = hop_count_alg.compute_routing_tb(self.network, node_id, igw_id)
                 if next_hop is not None:
                     node.routing_table[igw_id] = next_hop
+                    print(f"  {node.id} → {igw_id}: {node.routing_table[igw_id]}")
         
         logging.info(f"Hop count routing tables created for {len(self.network.nodes)} nodes")
+                    
         return True
     
     def wcett_sim(self):
@@ -191,13 +194,16 @@ class MeshNetworkSimulator:
         self.network.routing_algorithm = None
         wcett_alg = routing.WCETTRouting()
         
+        print("\nWCETT initial next hop:")
         for node_id, node in self.network.nodes.items():
             for igw_id in igw_nodes:
                 next_hop = wcett_alg.compute_routing_tb(self.network, node_id, igw_id)
                 if next_hop is not None:
                     node.routing_table[igw_id] = next_hop
+                    print(f"  {node.id} → {igw_id}: {node.routing_table[igw_id]}")
         
         logging.info(f"WCETT routing tables created for {len(self.network.nodes)} nodes")
+        
         return True
     
     def wcett_lb_post_sim(self):
@@ -224,9 +230,14 @@ class MeshNetworkSimulator:
                 if next_hop is not None:
                     node.routing_table[igw_id] = next_hop
         
-        print(f"Is WCETT-LB Post Routing Algorithm: {isinstance(self.network.routing_algorithm, routing.WCETT_LB_POSTRouting)}")
-        
         logging.info(f"WCETT-LB Post routing tables created for {len(self.network.nodes)} nodes")
+        
+        if hasattr(wcett_lb_post_algorithm, 'path_cache'):
+            print("\nWCETT-LB Post initial paths:")
+            for (src, dest), path in wcett_lb_post_algorithm.path_cache.items():
+                if len(path) > 0:
+                    print(f"  {src} → {dest}: {path}")
+
         return True
     
     def wcett_lb_pre_sim(self):
@@ -252,17 +263,14 @@ class MeshNetworkSimulator:
                 next_hop = wcett_lb_pre_algorithm.compute_routing_tb(self.network, node_id, igw_id)
                 if next_hop is not None:
                     node.routing_table[igw_id] = next_hop
+                    
+        logging.info(f"WCETT-LB Pre routing tables created for {len(self.network.nodes)} nodes")
         
-        print(f"Is WCETT-LB Pre Routing Algorithm: {isinstance(self.network.routing_algorithm, routing.WCETT_LB_PRERouting)}")
-        
-        # Print path cache for debugging
         if hasattr(wcett_lb_pre_algorithm, 'path_cache'):
-            print("WCETT-LB Pre initial paths:")
+            print("\nWCETT-LB Pre initial paths:")
             for (src, dest), path in wcett_lb_pre_algorithm.path_cache.items():
                 if len(path) > 0:
                     print(f"  {src} → {dest}: {path}")
-        
-        logging.info(f"WCETT-LB Pre routing tables created for {len(self.network.nodes)} nodes")
         return True
 
 def main():

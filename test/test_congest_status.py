@@ -29,7 +29,7 @@ class TestWcettLBPost(unittest.TestCase):
         assert self.node1.load == 2
     
     def test_update_congest_status_congestion(self):
-        # Fill queue with items exceeding threshold
+        # Fill queue with items at threshold
         for _ in range(BUFFER_SIZE):
             self.node1.queue.put("packet")
         

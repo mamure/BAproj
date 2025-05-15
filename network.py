@@ -267,7 +267,7 @@ class Graph:
         Args:
             node_a (Node): First node to connect
             node_b (Node): Second node to connect
-            bandwidth (float): Maximum data transfer rate for the edge
+            bandwidth (float): Maximum data transfer rate in Mbps (megabits per second)
             loss_rate (float): Probability (0-1) of packet loss on the edge
 
         Returns:

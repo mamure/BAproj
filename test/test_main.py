@@ -7,8 +7,8 @@ import main
 
 class TestPacketRate(unittest.TestCase):
     def setUp(self):
-        self.simulator = main.MeshNetworkSimulator(1)
-        self.simulator.wcett_lb_pre_sim()
+        self.simulator = main.MeshNetworkSimulator(0)
+        self.simulator.hop_count_sim()
 
     def test_packet_rate(self):
         """Test if the simulator correctly sends packets at the configured rate"""

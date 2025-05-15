@@ -36,6 +36,7 @@ def initialize_network():
     network.add_edge(mr2, mr5, 150, 0.1)
     network.add_edge(mr2, mr3, 150, 0.1)
     network.add_edge(mr2, mr6, 70, 0.1)
+    network.add_edge(mr4, mr6, 5, 0.1)
 
     network.add_edge(c7, mr6, 35, 0.1)
     network.add_edge(c7, mr2, 180, 0.1)

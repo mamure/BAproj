@@ -1,7 +1,12 @@
 def compute_ett(edge, packet_sz):
     loss_rate = edge.loss_rate
-    etx = 1 / ((1 - loss_rate) * (1 - loss_rate))
-    ett = etx * (packet_sz / edge.bandwidth)
+    p = 1 - (1 - loss_rate) * (1 - loss_rate)
+    etx = 1 / (1 - p)
+    
+    # Convert bandwidth from Mbps to bytes/sec
+    bandwidth_bps = edge.bandwidth * 125000
+    
+    ett = etx * (packet_sz / bandwidth_bps)
     return ett
 
 def compute_wcett(edges, packet_sz, beta = 0.5):

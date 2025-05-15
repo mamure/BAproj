@@ -6,7 +6,7 @@ class Packet:
         Args:
             src (int)
             dest (int)
-            size (int)
+            size (int): In bytes
             packet_type (str, optional): Defaults to "DATA".
         """
         self.id = packet_id

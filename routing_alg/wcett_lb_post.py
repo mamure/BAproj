@@ -1,7 +1,7 @@
 from routing_alg import wcett
 
 CONGESTION_THRESHOLD = 0.5
-LOAD_BALANCE_THRESHOLD = 0 # one congested node per route
+LOAD_BALANCE_THRESHOLD = 1 # two congested nodes per route
 
 def update_congest_status(node, nw):
     """Updates the node congestion status
@@ -38,18 +38,7 @@ def compute_wcett_lb(edges, packet_sz, nw, path):
         
         if congested_nodes_count > LOAD_BALANCE_THRESHOLD:
             penalty *= 2
-    return (base + penalty, congested_nodes_count)
-
-def get_congested_node_count(nw, path):
-    """Count the number of congested nodes in a path
-    """
-    count = 0
-    for node_id in path[1:-1]:
-        node = nw.nodes[node_id]
-        update_congest_status(node, nw)
-        if node.congest_status:
-            count += 1
-    return count
+    return (base + penalty)
 
 def update_path(node, nw, dest_id, routing_alg):
     current_path = routing_alg.path_cache.get((node.id, dest_id))

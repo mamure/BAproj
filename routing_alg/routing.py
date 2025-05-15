@@ -46,12 +46,12 @@ def is_valid_path(nw, path):
     return True
 
 class RoutingProtocol:
-    def compute_routing_tb(self, nw, src, dest):
+    def compute_routing_tb(self, nw, src_id, dest_id):
         """
         Args:
             nw (Network): The network graph
-            src (int): node_id for the source node
-            dest (int): node_id for the destination node
+            src_id (int): node_id for the source node
+            dest_id (int): node_id for the destination node
         """
         raise NotImplementedError()
 
@@ -122,17 +122,13 @@ class WCETT_LB_POSTRouting(RoutingProtocol):
                     edges.append(edge)
                     
             if edges:
-                metric, congested_count = wcett_lb_post.compute_wcett_lb(edges, self.packet_sz, nw, path)
-                path_metrics.append((path, metric, congested_count))
+                metric = wcett_lb_post.compute_wcett_lb(edges, self.packet_sz, nw, path)
+                path_metrics.append((path, metric))
 
         if not path_metrics:
             return None
         
-        path_metrics.sort(key=lambda x: (
-            1 if x[2] > wcett_lb_post.LOAD_BALANCE_THRESHOLD else 0, # weights in path if there are more than allowed congested nodes
-            x[2], # congested nodes
-            x[1] # weights in path
-        ))
+        path_metrics.sort(key=lambda x: (x[1]))
         
         best_path = path_metrics[0][0]
         
@@ -140,16 +136,6 @@ class WCETT_LB_POSTRouting(RoutingProtocol):
         
         if best_path and len(best_path) >= 2:
             return best_path[1]
-        return None
-    
-    def best_path(self, nw, src, dest):
-        if (src, dest) in self.path_cache:
-            return self.path_cache[(src, dest)]
-        
-        self.compute_routing_tb(nw, src, dest)
-        
-        if (src, dest) in self.path_cache:
-            return self.path_cache[(src, dest)]
         return None
     
     def alternative_path(self, nw, src, dest, non_nodes):
@@ -178,7 +164,7 @@ class WCETT_LB_POSTRouting(RoutingProtocol):
                     edges.append(edge)
             
             if edges:
-                metric, _ = wcett_lb_post.compute_wcett_lb(edges, self.packet_sz, nw, path)
+                metric = wcett_lb_post.compute_wcett_lb(edges, self.packet_sz, nw, path)
                 path_metrics.append((path, metric))
         
         if not path_metrics:
@@ -213,8 +199,8 @@ class WCETT_LB_PRERouting(RoutingProtocol):
                     edges.append(edge)
                     
             if edges:
-                metric, congested_count = wcett_lb_post.compute_wcett_lb(edges, self.packet_sz, nw, path)
-                path_metrics.append((path, metric, congested_count))
+                metric = wcett_lb_post.compute_wcett_lb(edges, self.packet_sz, nw, path)
+                path_metrics.append((path, metric))
 
         if not path_metrics:
             return None
@@ -227,16 +213,6 @@ class WCETT_LB_PRERouting(RoutingProtocol):
         
         if best_path and len(best_path) >= 2:
             return best_path[1]
-        return None
-    
-    def best_path(self, nw, src, dest):
-        if (src, dest) in self.path_cache:
-            return self.path_cache[(src, dest)]
-        
-        self.compute_routing_tb(nw, src, dest)
-        
-        if (src, dest) in self.path_cache:
-            return self.path_cache[(src, dest)]
         return None
     
     def alternative_path(self, nw, src, dest, non_nodes):
@@ -264,7 +240,7 @@ class WCETT_LB_PRERouting(RoutingProtocol):
                     edges.append(edge)
             
             if edges:
-                metric, _ = wcett_lb_pre.compute_wcett_lb(edges, self.packet_sz, nw, path)
+                metric = wcett_lb_pre.compute_wcett_lb(edges, self.packet_sz, nw, path)
                 path_metrics.append((path, metric))
         
         if not path_metrics:

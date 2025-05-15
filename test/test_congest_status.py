@@ -37,3 +37,6 @@ class TestWcettLBPost(unittest.TestCase):
         
         assert self.node1.congest_status is True
         assert self.node1.load == BUFFER_SIZE
+
+if __name__ == '__main__':
+    unittest.main()

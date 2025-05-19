@@ -40,7 +40,7 @@ class TestPacketRate(unittest.TestCase):
         # Test cases
         test_duration = 20  # seconds
         
-        # Case 1: Just below 20 packets per second
+        # Case 1: Below 20 packets per second
         load_below = 10
         expected_below = test_duration * load_below
         packets_below = count_packets(test_duration, load_below)

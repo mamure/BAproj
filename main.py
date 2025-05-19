@@ -37,7 +37,7 @@ class MeshNetworkSimulator:
         else:
             raise ValueError("Invalid topology type. Must be 0 (small) or 1 (big)")
         
-    def simulate_traffic(self, duration=30, load=20):
+    def simulate_traffic(self, duration, load):
         """
         Args:
             duration (int, optional): Duration of simulation in seconds.
@@ -75,7 +75,7 @@ class MeshNetworkSimulator:
         
         threads = []
         active_threads = []
-        max_concurrent_threads = 16
+        max_concurrent_threads = 50
         cleanup = 5
         
         packet_interval = 1.0 / load
@@ -141,13 +141,13 @@ class MeshNetworkSimulator:
             throughput = (total_bytes * 8 / 1000) / elapsed if elapsed > 0 else 0
             avg_delay = (total_delay / packets_sent) if packets_sent > 0 else 0
             
-            logger.info('\n=== Simulation Results ===')
-            logger.info(f'Duration: {elapsed:.1f} seconds')
-            logger.info(f'Total packets: {total_packets}')
-            logger.info(f'Successful packets: {packets_sent}')
-            logger.info(f'Error rate: {error_rate:.1f}%')
-            logger.info(f'Throughput: {throughput:.1f} Kbps')
-            logger.info(f'Average delay: {avg_delay:.2f} seconds')
+            logging.info('=== Simulation Results ===')
+            logging.info(f'Duration: {elapsed:.1f} seconds')
+            logging.info(f'Total packets: {total_packets}')
+            logging.info(f'Successful packets: {packets_sent}')
+            logging.info(f'Error rate: {error_rate:.1f}%')
+            logging.info(f'Throughput: {throughput:.1f} Kbps')
+            logging.info(f'Average delay: {avg_delay:.2f} seconds')
             
             return error_rate, throughput, avg_delay
     
@@ -236,7 +236,7 @@ class MeshNetworkSimulator:
         logging.info(f"WCETT-LB Post routing tables created for {len(self.network.nodes)} nodes")
         
         if hasattr(wcett_lb_post_algorithm, 'path_cache'):
-            logger.info("\nWCETT-LB Post initial paths:")
+            logger.info("WCETT-LB Post initial paths:")
             for (src, dest), path in wcett_lb_post_algorithm.path_cache.items():
                 if len(path) > 0:
                     logger.info(f"{src} → {dest}: {path}")
@@ -270,7 +270,7 @@ class MeshNetworkSimulator:
         logging.info(f"WCETT-LB Pre routing tables created for {len(self.network.nodes)} nodes")
         
         if hasattr(wcett_lb_pre_algorithm, 'path_cache'):
-            logger.info("\nWCETT-LB Pre initial paths:")
+            logger.info("WCETT-LB Pre initial paths:")
             for (src, dest), path in wcett_lb_pre_algorithm.path_cache.items():
                 if len(path) > 0:
                     logger.info(f"{src} → {dest}: {path}")

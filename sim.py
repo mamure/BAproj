@@ -50,12 +50,13 @@ def run_all_sims(base_load=5, duration=180, topology=0, save_dir=None, show_plot
     timestamp = time.strftime("%m%d%H%M")
     
     if save_dir:
-        os.makedirs(save_dir, exist_ok=True)
-        results_dir = os.path.join(save_dir, f"results_{timestamp}")
-        os.makedirs(results_dir, exist_ok=True)
+        base_results_dir = os.path.join(save_dir, "simulation_results")
     else:
-        results_dir = f"results_{timestamp}"
-        os.makedirs(results_dir, exist_ok=True)
+        base_results_dir = "simulation_results"
+    
+    os.makedirs(base_results_dir, exist_ok=True)
+    results_dir = os.path.join(base_results_dir, f'results_{timestamp}')
+    os.makedirs(results_dir, exist_ok=True)
     
     # Initialize results dictionaries
     hop_count_results = {'er': [], 'throughput': [], 'delay': []}
@@ -221,12 +222,13 @@ def run_single_algorithm_sim(algorithm, base_load=5, duration=180, topology=0, s
     timestamp = time.strftime("%m%d%H%M")
     
     if save_dir:
-        os.makedirs(save_dir, exist_ok=True)
-        results_dir = os.path.join(save_dir, f"results_{timestamp}_{algorithm}")
-        os.makedirs(results_dir, exist_ok=True)
+        base_results_dir = os.path.join(save_dir, "simulation_results")
     else:
-        results_dir = f"results_{timestamp}_{algorithm}"
-        os.makedirs(results_dir, exist_ok=True)
+        base_results_dir = "simulation_results"
+    
+    os.makedirs(base_results_dir, exist_ok=True)
+    results_dir = os.path.join(base_results_dir, f'results_{timestamp}')
+    os.makedirs(results_dir, exist_ok=True)
     
     # Initialize results
     results = {'er': [], 'throughput': [], 'delay': []}
@@ -349,6 +351,8 @@ if __name__ == "__main__":
     # If run directly without arguments, use the default settings
     import sys
     if len(sys.argv) == 1:
+        setup_logging()
         run_all_sims()
     else:
+        setup_logging()
         main()

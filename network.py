@@ -16,7 +16,7 @@ EDGE_ID_COUNTER = 0
 PACKET_ID_COUNTER = 0
 
 BUFFER_SIZE = 75
-QUEUE_PROCESS_TIME = 0.05  # time for node to process packet. Adjust to fill up queue.
+QUEUE_PROCESS_TIME = 0.05  # time for node to process packet. Adjust to fill up queue. ≈ 20 pkt/s to fill up
 
 def node_id_manager():
     """Generate and return a unique ID for a new node.
@@ -114,9 +114,7 @@ class Node:
         """
         while self.running:
             try:
-                # print(f"[DEBUG network] Node {self.id}: enter monitor_congestion; queue_size={self.queue.qsize()}")
                 wcett_lb_post.update_congest_status(self, self.network)
-                # print(f"[DEBUG network] Node {self.id}: congest_status={self.congest_status}")
                 self.load = self.queue.qsize()
 
                 for dest_id in self.routing_table.keys():
@@ -128,7 +126,7 @@ class Node:
                 time.sleep(1)
             except Exception as e:
                 if self.running:
-                    print(f"Error monitoring congestion at Node {self.id}: {e}")
+                    logging.error(f"Error monitoring congestion at Node {self.id}: {e}")
         
     def process_packets(self):
         """Process packets from the node's queue.
@@ -150,7 +148,7 @@ class Node:
                 continue
             except Exception as e:
                 if self.running:
-                    print(f'Error processing packet at Node {self.id}: {e}')
+                    logging.error(f'Error processing packet at Node {self.id}: {e}')
     
     def send_ack(self, packet, src):
         """Send an acknowledgment packet in response to a data packet.
@@ -178,7 +176,7 @@ class Node:
                 self.queue.put({'packet': packet, 'sender': src})
                 return True
             else:
-                print(f"[DEBUG network] Node {self.id}: dropping {packet.id} (congested)")
+                print(f"Node {self.id}: dropping {packet.id} (congested)")
                 self.dropped_packets.append({
                     'packet_id': packet.id,
                     'src': packet.src_id,
@@ -188,7 +186,7 @@ class Node:
                 })
                 return False
         except Exception as e:
-            print(f"Error receiving message at Node {self.id}: {e}")
+            logging.error(f"Error receiving message at Node {self.id}: {e}")
             return False
     
 class Edge:
@@ -225,7 +223,7 @@ class Edge:
             dict: Result with 'success' boolean and 'reason' string if failed
         """
         if not self.active:
-            print(f"Edge {self.id}: Inactive, cannot send packet {packet.id}")
+            logging.error(f"Edge {self.id}: Inactive, cannot send packet {packet.id}")
             return {'success': False, 'reason': 'edge_inactive'}
         if src.id != self.src.id and src.id != self.dest.id:
             return {'success': False, 'reason': 'invalid_src'}

@@ -97,6 +97,14 @@ I have made some progress on the report by expanding various sections and writin
 
 On the coding side, I haven’t made significant changes yet. I’ve implemented a few minor changes.
 ## Week 15 (12-18 may)
+I have done a general restructuring of the project to make it easier to manage. I have also written an in-depth README to help newcomers better understand the coding side of the project, including how to parse arguments for the simulator.
+Instead of using print statements, I have implemented logging, making it easier to review past runs and analyze how the simulation performed. I have written tests to verify the implementation of the routing algorithms and to ensure that packets follow the expected routes.
+
+Furthermore, I wrote the introduction along with sections on the implementation and relevant considerations.
+
+One of the simulation runs shows promising results: the load-balancing routing algorithms yield lower error rates than the others. However, due to the bandwidth attributes of the network's edges, one node becomes heavily congested when using the WCETT routing algorithm. This leads to a high, yet understandable, error rate because of dropped packets.
+
+Should I redesign the network topology with more deliberate consideration of bandwidth and neighbor relationships? The current topology was created somewhat random, by drawing it out randomly, assigning bandwidth, and then finalizing it for the project.
 ## Week 16 (19-25 may)
 ## Week 17 (26 may-1 jun)
 ## Week 18 (2-7 jun)

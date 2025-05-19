@@ -15,10 +15,10 @@ def setup_logging(log_dir="logs", log_level=logging.INFO, console_level=logging.
             root_logger.removeHandler(handler)
             
     file_formatter = logging.Formatter(
-        '%(asctime)s | %(levelname)-8s | %(name)-20s | %(message)s'
+        '%(asctime)s | %(levelname)s | %(name)-2s | %(message)s'
     )
     console_formatter = logging.Formatter(
-        '%(levelname)-8s | %(message)s'
+        '%(levelname)s | %(message)s'
     )
     
     file_handler = RotatingFileHandler(

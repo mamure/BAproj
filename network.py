@@ -2,7 +2,6 @@ import threading
 import random as rnd
 import time
 import queue
-import logging
 from packet import Packet
 import routing_alg.wcett_lb_post as wcett_lb_post
 import routing_alg.wcett_lb_pre as wcett_lb_pre
@@ -120,13 +119,13 @@ class Node:
                 for dest_id in self.routing_table.keys():
                     routing_algorithm = self.network.routing_algorithm
                     if routing_algorithm and isinstance(routing_algorithm, routing.WCETT_LB_POSTRouting):
-                        switched, paths = wcett_lb_post.update_path(self, self.network, dest_id, routing_algorithm)
+                        wcett_lb_post.update_path(self, self.network, dest_id, routing_algorithm)
                     elif routing_algorithm and isinstance(routing_algorithm, routing.WCETT_LB_PRERouting):
-                        switched, paths = wcett_lb_pre.update_path(self, self.network, dest_id, routing_algorithm)
+                        wcett_lb_pre.update_path(self, self.network, dest_id, routing_algorithm)
                 time.sleep(1)
             except Exception as e:
                 if self.running:
-                    logging.error(f"Error monitoring congestion at Node {self.id}: {e}")
+                    logger.error(f"Error monitoring congestion at Node {self.id}: {e}")
         
     def process_packets(self):
         """Process packets from the node's queue.
@@ -148,7 +147,7 @@ class Node:
                 continue
             except Exception as e:
                 if self.running:
-                    logging.error(f'Error processing packet at Node {self.id}: {e}')
+                    logger.error(f'Error processing packet at Node {self.id}: {e}')
     
     def send_ack(self, packet, src):
         """Send an acknowledgment packet in response to a data packet.
@@ -186,7 +185,7 @@ class Node:
                 })
                 return False
         except Exception as e:
-            logging.error(f"Error receiving message at Node {self.id}: {e}")
+            logger.error(f"Error receiving message at Node {self.id}: {e}")
             return False
     
 class Edge:
@@ -223,7 +222,7 @@ class Edge:
             dict: Result with 'success' boolean and 'reason' string if failed
         """
         if not self.active:
-            logging.error(f"Edge {self.id}: Inactive, cannot send packet {packet.id}")
+            logger.error(f"Edge {self.id}: Inactive, cannot send packet {packet.id}")
             return {'success': False, 'reason': 'edge_inactive'}
         if src.id != self.src.id and src.id != self.dest.id:
             return {'success': False, 'reason': 'invalid_src'}

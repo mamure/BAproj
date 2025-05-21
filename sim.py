@@ -3,7 +3,6 @@ import argparse
 import os
 import json
 import time
-import logging
 from main import MeshNetworkSimulator
 from network import reset_id_managers
 from log_config import setup_logging, get_logger
@@ -65,8 +64,8 @@ def run_all_sims(base_load=5, duration=180, topology=0, save_dir=None, show_plot
     wcett_lb_pre_results = {'er': [], 'throughput': [], 'delay': []}
     
     # Run all simulations
-    logging.info(f"=== Running simulations with {topology_name} topology, duration={duration}s ===")
-    logging.info(f"Load series: {loads} packets/second")
+    logger.info(f"=== Running simulations with {topology_name} topology, duration={duration}s ===")
+    logger.info(f"Load series: {loads} packets/second")
     
     # Hop Count simulations
     reset_id_managers()

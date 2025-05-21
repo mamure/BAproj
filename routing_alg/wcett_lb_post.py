@@ -1,4 +1,7 @@
 from routing_alg import wcett
+from log_config import get_logger
+
+logger = get_logger("lb_post")
 
 CONGESTION_THRESHOLD = 0.5
 LOAD_BALANCE_THRESHOLD = 1 # two congested nodes per route
@@ -43,7 +46,7 @@ def compute_wcett_lb(edges, packet_sz, nw, path):
 def update_path(node, nw, dest_id, routing_alg):
     current_path = routing_alg.path_cache.get((node.id, dest_id))
     if not current_path:
-        return False, None
+        return None
     
     congested_nodes = []
     for node_id in current_path[1:-1]:
@@ -55,9 +58,9 @@ def update_path(node, nw, dest_id, routing_alg):
             routing_alg.path_cache[(node.id, dest_id)] = new_path
             if len(new_path) >= 2:
                 node.routing_table[dest_id] = new_path[1]
-                print(f"[PATH SWITCH] switched path for node {node.id}: {current_path} → {new_path}")
-                return True, (current_path, new_path)
+                logger.info(f"Switched path for node {node.id}: {current_path} → {new_path}")
+                return (current_path, new_path)
         else:
-            print(f"⚠️ Node {node.id} could not find alternative path to {dest_id} that avoids {congested_nodes}")
+            logger.error(f"⚠️ Node {node.id} could not find alternative path to {dest_id} that avoids {congested_nodes}")
                 
-    return False, None
+    return None

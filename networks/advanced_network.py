@@ -1,3 +1,8 @@
+import sys
+import os
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 import network as nt
 import visualiser as vis
 
@@ -75,4 +80,4 @@ def initialize_network():
     
 if __name__ == "__main__":
     network = initialize_network()
-    vis.visualize_network(network)
+    vis.visualize_network(network, "advanced")

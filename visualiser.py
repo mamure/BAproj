@@ -1,7 +1,7 @@
 from pyvis.network import Network as pyNT
 import os
 
-def visualize_network(network):
+def visualize_network(network, network_type="graph"):
     """
     Create an interactive visualization of a network topology.
     
@@ -12,12 +12,13 @@ def visualize_network(network):
     
     Args:
         network (Graph): A network graph object containing nodes and edges.
+        network_type (str): Type of network for the output filename (default: "graph")
     """
     net = pyNT(height='750px', width='100%', bgcolor='#272A32', font_color='white')
 
     node_colors = {
         "IGW": "red",
-        "AP": "blue",
+        "MR": "orange",
         "C": "green"
     }
     
@@ -42,6 +43,6 @@ def visualize_network(network):
     output_dir = "html_vis"
     os.makedirs(output_dir, exist_ok=True)
     
-    output_path = os.path.join(output_dir, "graph.html")
+    output_path = os.path.join(output_dir, f"{network_type}_graph.html")
     net.write_html(output_path)
     print(f"Network graph saved at '{output_path}'. Open it in your browser to view.")

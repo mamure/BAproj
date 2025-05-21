@@ -1,7 +1,10 @@
-import network as nt
-from pyvis.network import Network as pyNT
+import sys
 import os
-import routing_alg.routing as routing
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+import network as nt
+import visualiser as vis
 
 def initialize_simple_network():
     """
@@ -21,32 +24,8 @@ def initialize_simple_network():
     network.add_edge(ap1, ap2, 1, 0.5)
     network.add_edge(ap2, c, 1, 0.5)
     
-    return network, igw, c
-
-def visualize_network(network):
-    net = pyNT(height='750px', width='100%', bgcolor='#272A32', font_color='white')
-
-    node_colors = {
-        "IGW": "red",
-        "AP": "blue",
-        "C": "green"
-    }
-    
-    for node_id, node in network.nodes.items():
-        color = node_colors.get(node.type)
-        net.add_node(node_id, label=f"Node {node_id}", title=f"Type: {node.type}", color=color)
-
-    for edge_id, edge in network.edges.items():
-        net.add_edge(edge.src.id, edge.dst.id, title=f"Bandwidth: {edge.bandwidth:.2f} Mbps, Loss Rate: {edge.loss_rate:.2f}")
-    
-    output_dir = "html_vis"
-    os.makedirs(output_dir, exist_ok=True)
-    
-    # Save the visualization
-    output_path = os.path.join(output_dir, "simple_graph.html")
-    net.write_html(output_path)
-    print(f"Network graph saved at '{output_path}'. Open it in your browser to view.")
+    return network
     
 if __name__ == "__main__":
-    network, igw, c = initialize_simple_network()
-    visualize_network(network)
+    network = initialize_simple_network()
+    vis.visualize_network(network, "simple")

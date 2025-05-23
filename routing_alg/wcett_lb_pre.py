@@ -3,7 +3,7 @@ from log_config import get_logger
 
 logger = get_logger("lb_pre")
 
-LOAD_BALANCE_THRESHOLD = 1 # two congested nodes per route
+LOAD_BALANCE_THRESHOLD = 0 # one congested nodes per route, ẟ = 1
 
 def calculate_traffic_concentration(nw):
     """

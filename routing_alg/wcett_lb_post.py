@@ -4,7 +4,7 @@ from log_config import get_logger
 logger = get_logger("lb_post")
 
 CONGESTION_THRESHOLD = 0.5
-LOAD_BALANCE_THRESHOLD = 1 # two congested nodes per route
+LOAD_BALANCE_THRESHOLD = 0 # one congested nodes per route, ẟ = 1
 
 def update_congest_status(node, nw):
     """Updates the node congestion status

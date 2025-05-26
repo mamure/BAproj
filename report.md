@@ -106,6 +106,10 @@ One of the simulation runs shows promising results: the load-balancing routing a
 
 Should I redesign the network topology with more deliberate consideration of bandwidth and neighbor relationships? The current topology was created somewhat random, by drawing it out randomly, assigning bandwidth, and then finalizing it for the project.
 ## Week 16 (19-25 may)
+I have made some “final” touches to the code and have started to analyze and discuss the results in the report. I’m focusing on how the error rate evolves as the packet rate increases, as well as how the end-to-end delay scales with throughput and the implications of the different routing algorithms.
+
+For the discussion, I’m thinking of writing about the importance of choosing the parameter that determines how many nodes per path are allowed to be congested before the path-switching mechanism is activated. The results show that no single value works well across different network sizes.
+In general, I think I’ll focus on parameter tuning in the discussion.
 ## Week 17 (26 may-1 jun)
 ## Week 18 (2-7 jun)
 ## Week 19 (8-10 jun)

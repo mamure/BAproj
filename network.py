@@ -136,6 +136,10 @@ class Node:
                 packet = message['packet']
                 src = message['sender']
                 self.received_packets.append(packet)
+                
+                if packet.type == 'ACK':
+                    logger.debug(f"Node {self.id} received ACK from {packet.src_id} for packet to {packet.dest_id}")
+                
                 if self.type == "IGW":
                     time.sleep(QUEUE_PROCESS_TIME * 0.1)  # IGWs are faster but not instant
                 else:
@@ -340,17 +344,34 @@ class Graph:
             if not edge:
                 return {'success': False, 'reason': 'nodes_not_connected'}
             
+            # Clear any old ACKs before sending
+            current_node.received_packets = [p for p in current_node.received_packets if p.type != 'ACK']
+            
             max_tries = 3
             for retry in range(max_tries):
                 send_result = edge.send_packet_edge(current_node, next_node, packet)
                 if send_result['success']:
-                    time.sleep(0.01)
-                    packet.route_taken.append(next_hop_id)
-                    current_node.sent_packets[packet.id] = time.time()
-                    current_node = next_node
-                    break
-                elif send_result['reason'] == 'packet_loss':
-                    continue
+                    # Wait for ACK from next hop
+                    ack_received = False
+                    start_time = time.time()
+                    while time.time() - start_time < 1:
+                        if any(pkt.type == 'ACK' and 
+                               pkt.src_id == next_hop_id and  # ACK from next hop
+                               pkt.dest_id == current_node.id  # ACK is for this node
+                               for pkt in current_node.received_packets):
+
+                            ack_received = True
+                            break
+                        time.sleep(0.1)
+                    
+                    if ack_received:
+                        # Move to next hop if ACK received
+                        packet.route_taken.append(next_hop_id)
+                        current_node.sent_packets[packet.id] = time.time()
+                        current_node = next_node
+                        break
+                    else:
+                        continue
                 else:
                     return send_result
             else:

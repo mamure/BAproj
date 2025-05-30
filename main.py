@@ -60,6 +60,8 @@ class MeshNetworkSimulator:
         igw_nodes = [node_id for node_id, node in self.network.nodes.items() 
             if node.type == "IGW"]
         
+        total_nodes = len(self.network.nodes)
+        
         def send_packet_thread(packet_id, src_id, dest_id):
             """
             Thread function to send a packet through the network.
@@ -74,7 +76,18 @@ class MeshNetworkSimulator:
         
         threads = []
         active_threads = []
-        max_concurrent_threads = 64
+
+        # Max Thread calculation
+        estimated_packet_lifetime = 2.0
+        base_threads = int(load * estimated_packet_lifetime)
+        client_threads = 3 * len(c_nodes)
+        topology_factor = int(total_nodes * 0.8)
+
+        max_concurrent_threads = base_threads + client_threads + topology_factor
+        max_concurrent_threads = min(max_concurrent_threads, 512)
+
+        logger.info(f"Using maximum {max_concurrent_threads} concurrent threads")
+        
         cleanup = 5
         
         packet_interval = 1.0 / load

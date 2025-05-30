@@ -81,7 +81,7 @@ def update_path(node, nw, dest_id, routing_alg):
         if (hasattr(transit_node, 'reported_congestion') and 
             transit_node.reported_congestion and
             hasattr(transit_node, 'wcett_lb_update_time') and
-            time.time() - transit_node.wcett_lb_update_time < 5):  # Consider warnings valid for 5 seconds
+            time.time() - transit_node.wcett_lb_update_time < 5):  # Consider notice valid for 5 seconds
             
             received_congestion = True
             congested_nodes.append(node_id)

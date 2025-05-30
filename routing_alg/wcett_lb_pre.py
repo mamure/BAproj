@@ -81,7 +81,7 @@ def update_path(node, nw, dest_id, routing_alg):
     if not current_path:
         return
     
-    # Check if any nodes in current path have reported potential congestion
+    # Check if any nodes in path have reported potential congestion
     received_congestion_warning = False
     potentially_congested_nodes = []
     

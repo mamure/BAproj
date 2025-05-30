@@ -1,49 +1,6 @@
 from routing_alg import hop_count as hc
-from routing_alg import wcett
-from routing_alg import wcett_lb_post
-from routing_alg import wcett_lb_pre
-
-def find_all_paths(nw, src, dest, path=None, visited=None, max_depth=10):
-    if path is None:
-        path = [src]
-    if visited is None:
-        visited = set([src])
-        
-    if src == dest:
-        return [path]
-    if len(path) > max_depth:
-        return []
-    
-    all_paths = []
-    src_node = nw.nodes[src]
-    
-    for neighbor_id in src_node.neighbors:
-        if neighbor_id not in visited:
-            neighbor_node = nw.nodes[neighbor_id]
-            if neighbor_node.type == "C" and neighbor_id != dest:
-                continue
-            edge = nw.get_edge_between_nodes(src, neighbor_id)
-            if edge and edge.active:
-                
-                new_visited = visited.copy()
-                new_visited.add(neighbor_id)
-                new_path = path + [neighbor_id]
-                
-                next_paths = find_all_paths(nw, neighbor_id, dest, new_path, new_visited, max_depth)
-                all_paths.extend(next_paths)
-                
-    return all_paths
-
-def is_valid_path(nw, path):
-    if len(path) <= 2:
-        return True
-        
-    for node_id in path[1:-1]:
-        node = nw.nodes[node_id]
-        if node.type == "C":  # Client nodes can't be transit nodes
-            return False
-            
-    return True
+from routing_alg import wcett, wcett_lb_post, wcett_lb_pre
+from routing_alg.routing_utils import find_all_paths, is_valid_path
 
 class RoutingProtocol:
     def compute_routing_tb(self, nw, src_id, dest_id):
@@ -199,7 +156,7 @@ class WCETT_LB_PRERouting(RoutingProtocol):
                     edges.append(edge)
                     
             if edges:
-                metric = wcett_lb_post.compute_wcett_lb(edges, self.packet_sz, nw, path)
+                metric = wcett_lb_pre.compute_wcett_lb(edges, self.packet_sz, nw, path)
                 path_metrics.append((path, metric))
 
         if not path_metrics:

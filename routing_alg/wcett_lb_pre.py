@@ -1,35 +1,50 @@
-from routing_alg import wcett, wcett_lb_post
+from routing_alg import wcett
+from routing_alg.routing_utils import calculate_traffic_concentration, get_min_ett, CONGESTION_THRESHOLD, LOAD_BALANCE_THRESHOLD
 from log_config import get_logger
+import time
 
 logger = get_logger("lb_pre")
 
-LOAD_BALANCE_THRESHOLD = 0 # one congested nodes per route, ẟ = 1
-
-def calculate_traffic_concentration(nw):
+def predict_congestion(node, nw):
     """
-    Calculate Ni - the number of child nodes using each node as next hop
-    """
-    traffic_concentration = {node_id: 0 for node_id in nw.nodes}
-    
-    for node_id, node in nw.nodes.items():
-        for dest_id, next_hop in node.routing_table.items():
-            if next_hop in traffic_concentration:
-                traffic_concentration[next_hop] += 1
-                
-    return traffic_concentration
-
-def get_min_ett(nw):
-    """Find the smallest ETT in the network"""
-    min_ett = float('inf')
-    
-    for edge in nw.edges.values():
-        if edge.active:
-            ett = wcett.compute_ett(edge, 1024)
-            min_ett = min(min_ett, ett)
-    
-    result = min_ett if min_ett != float('inf') else 1.0
-    return result
+    Args:
+        node: The node to check for predicted congestion
+        nw: The network graph
         
+    Returns:
+        bool: True if congestion is predicted, False otherwise
+    """
+    total_bw = 0
+    count = 0
+    for neighbor_id in node.neighbors:
+        edge = nw.get_edge_between_nodes(node.id, neighbor_id)
+        if edge and edge.active:
+            total_bw += edge.bandwidth
+            count += 1
+    avg_tx_rate = total_bw / count if count > 0 else 0
+    
+    queue_length = node.queue.qsize()
+    
+    if avg_tx_rate > 0:
+        ql_b_term = queue_length / avg_tx_rate
+        was_predicted = node.predicted_congestion if hasattr(node, 'predicted_congestion') else False
+        node.predicted_congestion = (ql_b_term >= CONGESTION_THRESHOLD)
+        
+        # multicast WCETT-LB to N_i
+        if node.predicted_congestion and not was_predicted:
+            node.wcett_lb_update_time = time.time()
+            node.reported_congestion = True
+    else:
+        node.predicted_congestion = True
+    
+    if total_bw > 0:
+        node.congest_status = (ql_b_term >= CONGESTION_THRESHOLD)
+    else:
+        node.congest_status = True
+        
+    node.load = queue_length
+    return node.predicted_congestion
+
 def compute_wcett_lb(edges, packet_sz, nw, path):
     base = wcett.compute_wcett(edges, packet_sz)
     
@@ -40,7 +55,7 @@ def compute_wcett_lb(edges, packet_sz, nw, path):
     
     for node_id in  path[1:-1]:
         node = nw.nodes[node_id]
-        wcett_lb_post.update_congest_status(node, nw)
+        predict_congestion(node, nw)
         
         total_bw = 0
         for neighbor_id in node.neighbors:
@@ -64,21 +79,51 @@ def compute_wcett_lb(edges, packet_sz, nw, path):
 def update_path(node, nw, dest_id, routing_alg):
     current_path = routing_alg.path_cache.get((node.id, dest_id))
     if not current_path:
-        return False, None
+        return
     
-    congested_nodes = []
+    # Check if any nodes in current path have reported potential congestion
+    received_congestion_warning = False
+    potentially_congested_nodes = []
+    
     for node_id in current_path[1:-1]:
-        if nw.nodes[node_id].congest_status:
-            congested_nodes.append(node_id)
-    if len(congested_nodes) > LOAD_BALANCE_THRESHOLD:
-        new_path = routing_alg.alternative_path(nw, node.id, dest_id, congested_nodes)
+        transit_node = nw.nodes[node_id]
+
+        if (hasattr(transit_node, 'reported_congestion') and 
+            transit_node.reported_congestion and
+            hasattr(transit_node, 'wcett_lb_update_time') and
+            time.time() - transit_node.wcett_lb_update_time < 5):  # Consider warnings valid for 5 seconds
+            
+            received_congestion_warning = True
+            potentially_congested_nodes.append(node_id)
+    
+    if received_congestion_warning:
+        # Calculate WCETT-LB for current path
+        current_edges = []
+        for i in range(len(current_path) - 1):
+            edge = nw.get_edge_between_nodes(current_path[i], current_path[i+1])
+            if edge:
+                current_edges.append(edge)
+        
+        current_metric = compute_wcett_lb(current_edges, 1024, nw, current_path)
+        
+        # Find alternative path avoiding potentially congested nodes
+        new_path = routing_alg.alternative_path(nw, node.id, dest_id, potentially_congested_nodes)
+        
         if new_path and new_path != current_path:
-            routing_alg.path_cache[(node.id, dest_id)] = new_path
-            if len(new_path) >= 2:
-                node.routing_table[dest_id] = new_path[1]
-                logger.info(f"Switched path for node {node.id}: {current_path} → {new_path}")
-                return True, (current_path, new_path)
+            # Calculate WCETT-LB for new path
+            new_edges = []
+            for i in range(len(new_path) - 1):
+                edge = nw.get_edge_between_nodes(new_path[i], new_path[i+1])
+                if edge:
+                    new_edges.append(edge)
+            
+            new_metric = compute_wcett_lb(new_edges, 1024, nw, new_path)
+            
+            # If WCETT-LB_current - WCETT-LB_best > threshold, make the switch
+            if current_metric - new_metric > LOAD_BALANCE_THRESHOLD:
+                routing_alg.path_cache[(node.id, dest_id)] = new_path
+                if len(new_path) >= 2:
+                    node.routing_table[dest_id] = new_path[1]
+                    logger.info(f"Proactively switched path for node {node.id}: {current_path} → {new_path}")
         else:
-            logger.error(f"⚠️ Node {node.id} could not find alternative path to {dest_id} that avoids {congested_nodes}")
-                
-    return False, None
+            logger.error(f"⚠️ Node {node.id} could not find alternative path to {dest_id} that avoids {potentially_congested_nodes}")

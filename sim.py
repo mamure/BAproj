@@ -79,7 +79,8 @@ def run_all_sims(base_load=5, duration=180, topology=0, save_dir=None, show_plot
         hop_count_results['delay'].append(delay)
     
     logger.debug("Cleaning up Hop-count simulator")
-    del sim # forcing python arbage collection
+    del sim # forcing python garbage collection
+    time.sleep(2)
         
     # WCETT simulations
     reset_id_managers()
@@ -94,6 +95,7 @@ def run_all_sims(base_load=5, duration=180, topology=0, save_dir=None, show_plot
     
     logger.debug("Cleaning up WCETT simulator")
     del sim
+    time.sleep(2)
         
     # WCETT-LB Post simulations
     reset_id_managers()
@@ -108,6 +110,7 @@ def run_all_sims(base_load=5, duration=180, topology=0, save_dir=None, show_plot
     
     logger.debug("Cleaning up WCETT-LB Post simulator")
     del sim
+    time.sleep(2)
     
     # WCETT-LB Pre simulations
     reset_id_managers()

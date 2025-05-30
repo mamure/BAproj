@@ -14,7 +14,7 @@ NODE_ID_COUNTER = 0
 EDGE_ID_COUNTER = 0
 PACKET_ID_COUNTER = 0
 
-BUFFER_SIZE = 75
+BUFFER_SIZE = 75 # message queue maximum length
 QUEUE_PROCESS_TIME = 0.05  # time for node to process packet. Adjust to fill up queue. ≈ 20 pkt/s to fill up
 
 def node_id_manager():
@@ -113,11 +113,16 @@ class Node:
         """
         while self.running:
             try:
-                wcett_lb_post.update_congest_status(self, self.network)
+                routing_algorithm = self.network.routing_algorithm
+                
+                if routing_algorithm and isinstance(routing_algorithm, routing.WCETT_LB_PRERouting):
+                    wcett_lb_pre.predict_congestion(self, self.network)
+                elif routing_algorithm and isinstance(routing_algorithm, routing.WCETT_LB_POSTRouting):
+                    wcett_lb_post.update_congest_status(self, self.network)
+                
                 self.load = self.queue.qsize()
 
                 for dest_id in self.routing_table.keys():
-                    routing_algorithm = self.network.routing_algorithm
                     if routing_algorithm and isinstance(routing_algorithm, routing.WCETT_LB_POSTRouting):
                         wcett_lb_post.update_path(self, self.network, dest_id, routing_algorithm)
                     elif routing_algorithm and isinstance(routing_algorithm, routing.WCETT_LB_PRERouting):
@@ -175,11 +180,15 @@ class Node:
             bool: True if packet was accepted, False if dropped
         """
         try:
-            if self.type == "IGW" or not self.congest_status:
-                self.queue.put({'packet': packet, 'sender': src})
+             # Prioritize ACKs, should always go through
+            if packet.type == 'ACK':
+                self.received_packets.append(packet)
                 return True
-            else:
-                print(f"Node {self.id}: dropping {packet.id} (congested)")
+            try:
+                self.queue.put_nowait({'packet': packet, 'sender': src})
+                return True
+            except queue.Full:
+                print(f"Node {self.id}: dropping {packet.id} (buffer full)")
                 self.dropped_packets.append({
                     'packet_id': packet.id,
                     'src': packet.src_id,
@@ -351,32 +360,27 @@ class Graph:
             for retry in range(max_tries):
                 send_result = edge.send_packet_edge(current_node, next_node, packet)
                 if send_result['success']:
-                    # Wait for ACK from next hop
+                    packet.route_taken.append(next_hop_id)
+                    current_node.sent_packets[packet.id] = time.time()
+                    current_node = next_node
+                    
+                    # Wait for ACK
                     ack_received = False
                     start_time = time.time()
-                    while time.time() - start_time < 1:
+                    while time.time() - start_time < 0.5: 
                         if any(pkt.type == 'ACK' and 
-                               pkt.src_id == next_hop_id and  # ACK from next hop
-                               pkt.dest_id == current_node.id  # ACK is for this node
-                               for pkt in current_node.received_packets):
-
+                              pkt.src_id == next_hop_id and
+                              pkt.dest_id == current_node.id
+                              for pkt in src.received_packets):
                             ack_received = True
                             break
-                        time.sleep(0.1)
-                    
-                    if ack_received:
-                        # Move to next hop if ACK received
-                        packet.route_taken.append(next_hop_id)
-                        current_node.sent_packets[packet.id] = time.time()
-                        current_node = next_node
-                        break
-                    else:
-                        continue
-                else:
-                    return send_result
+                        time.sleep(0.05)
+                    break
             else:
-                return {'success': False, 'reason': 'max_tries'}
-        if packet.id in dest.dropped_packets:
-            return {'success': False, 'reason': 'dropped_at_destination', 'packet': packet.id}
+                # If we couldn't send the packet at all, try again or fail
+                if retry == max_tries - 1:
+                    return send_result
+    
+        # If we reached here, the packet made it to the destination
         packet.delivered_time = time.time()
         return {'success': True, 'packet': packet}

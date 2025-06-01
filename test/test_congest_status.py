@@ -6,6 +6,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from routing_alg.wcett_lb_post import update_congest_status
 from network import Graph, BUFFER_SIZE
+from routing_alg.routing import RoutingProtocol
 
 class TestWcettLBPost(unittest.TestCase):
     def setUp(self):
@@ -17,26 +18,29 @@ class TestWcettLBPost(unittest.TestCase):
         
         self.network.add_edge(self.node1, self.node2, 10, 0)
         self.network.add_edge(self.node1, self.node3, 10, 0)
+        
+        self.routing_alg = RoutingProtocol()
+        self.routing_alg.path_cache = {}
     
     def test_update_congest_status_no_congestion(self):
         # Fill queue with some small number of items
         for _ in range(2):
             self.node1.queue.put("packet")
         
-        update_congest_status(self.node1, self.network)
+        update_congest_status(self.node1, self.network, self.routing_alg)
         
         assert self.node1.congest_status is False
-        assert self.node1.load == 2
+        assert self.node1.queue.qsize() == 2
     
     def test_update_congest_status_congestion(self):
         # Fill queue with items at threshold
         for _ in range(BUFFER_SIZE):
             self.node1.queue.put("packet")
         
-        update_congest_status(self.node1, self.network)
+        update_congest_status(self.node1, self.network, self.routing_alg)
         
         assert self.node1.congest_status is True
-        assert self.node1.load == BUFFER_SIZE
+        assert self.node1.queue.qsize() == BUFFER_SIZE
 
 if __name__ == '__main__':
     unittest.main()

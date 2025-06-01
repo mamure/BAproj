@@ -1,41 +1,82 @@
-from routing_alg import wcett
-from routing_alg.routing_utils import calculate_traffic_concentration, get_min_ett, CONGESTION_THRESHOLD, LOAD_BALANCE_THRESHOLD
-from log_config import get_logger
 import time
+import sys
+import os
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from log_config import get_logger
+import network as nt
+from routing_alg import wcett
+from routing_alg.routing_utils import (
+    LOAD_BALANCE_THRESHOLD,
+    calculate_traffic_concentration,
+    compute_ql_b_term,
+    get_min_ett,
+    get_child_nodes,
+    find_all_paths
+)
 
 logger = get_logger("lb_post")
 
-def update_congest_status(node, nw):
-    """Updates the node congestion status
+def update_congest_status(node, nw, routing_alg):
+    """Updates the node congestion status and multicasts WCETT-LB metrics if congested
         Should be calculated periodiacally
+        
+    Args:
+        node: The node to check congestion status
+        nw: The network graph
+        routing_alg: The routing algorithm instance
+        
+    Returns:
+        bool: True if node is congested, False otherwise
     """
-    total_bw = 0
-    count = 0
-    for neighbor_id in node.neighbors:
-        edge = nw.get_edge_between_nodes(node.id, neighbor_id)
-        if edge and edge.active:
-            total_bw += edge.bandwidth
-            count += 1
-    avg_tx_rate = total_bw / count if count > 0 else 0
-    
     queue_length = node.queue.qsize()
     
-    if avg_tx_rate > 0:
-        ql_b_term = queue_length / avg_tx_rate
-        is_congested = node.congest_status if hasattr(node, 'congest_status') else False
-        node.congest_status = (ql_b_term >= CONGESTION_THRESHOLD)
+    is_congested = node.congest_status if hasattr(node, 'congest_status') else False
+    node.congest_status = (queue_length >= nt.BUFFER_SIZE)
         
-        # multicast WCETT-LB to N_i
-        if node.congest_status and not is_congested:
-            node.wcett_lb_update_time = time.time()
-            node.reported_congestion = True
-    else:
-        node.congest_status = True
-    
-    node.load = queue_length
+    # If congestion state changed to congested
+    if node.congest_status and not is_congested:
+        node.wcett_lb_update_time = time.time()
+        node.reported_congestion = True
+        
+        # Calculate node's new WCETT-LB metric for all paths from this node
+        paths = []
+        for dest_id in nw.nodes:
+            if dest_id != node.id:
+                current_path = routing_alg.path_cache.get((node.id, dest_id))
+                if current_path:
+                    edges = []
+                    for i in range(len(current_path) - 1):
+                        edge = nw.get_edge_between_nodes(current_path[i], current_path[i+1])
+                        if edge:
+                            edges.append(edge)
+                            
+                    if edges:
+                        metric = compute_wcett_lb(edges, 1024, nw, current_path)
+                        paths.append((dest_id, current_path, metric))
+                        
+        child_nodes = get_child_nodes(node, nw)
+        
+        # Multicast WCETT-LB metrics to N_i                
+        for child_id in child_nodes:
+            child = nw.nodes[child_id]
+            if hasattr(child, 'receive_wcett_lb_update'):
+                child.receive_wcett_lb_update(node.id, paths)
+        
     return node.congest_status
 
 def compute_wcett_lb(edges, packet_sz, nw, path):
+    """_summary_
+
+    Args:
+        edges (_type_): _description_
+        packet_sz (_type_): _description_
+        nw (_type_): _description_
+        path (_type_): _description_
+
+    Returns:
+        _type_: _description_
+    """
     base = wcett.compute_wcett(edges, packet_sz)
     
     traffic_concentration = calculate_traffic_concentration(nw)
@@ -43,20 +84,9 @@ def compute_wcett_lb(edges, packet_sz, nw, path):
     
     load_penalty = 0
     
-    for node_id in  path[1:-1]:
+    for node_id in path[1:-1]:
         node = nw.nodes[node_id]
-        update_congest_status(node, nw)
-        
-        total_bw = 0
-        for neighbor_id in node.neighbors:
-            edge = nw.get_edge_between_nodes(node_id, neighbor_id)
-            if edge and edge.active:
-                total_bw += edge.bandwidth
-        
-        if total_bw > 0:
-            ql_b_term = node.queue.qsize() / total_bw
-        else:
-            ql_b_term = node.queue.qsize()
+        ql_b_term = compute_ql_b_term(node, nw)
             
         # Traffic concentration term
         ni_term = min_ett * traffic_concentration[node_id]
@@ -67,53 +97,76 @@ def compute_wcett_lb(edges, packet_sz, nw, path):
     return wcett_lb
 
 def update_path(node, nw, dest_id, routing_alg):
+    """Update routing path based on congestion reports and WCETT-LB metrics
+    from nodes in the current path and child nodes.
+    
+    Args:
+        node: The node that might update its routing table
+        nw: The network graph
+        dest_id: Destination node ID
+        routing_alg: The routing algorithm instance
+    """
+    received_wcett_lb_update = False
+    
+    if hasattr(node, 'wcett_lb_updates'):
+        current_time = time.time()
+        for sender_id, update in node.wcett_lb_updates.items():
+            if current_time - update['timestamp'] < 3: # Consider updates valid for 3 seconds
+                received_wcett_lb_update = True
+            break
+    
+    if not received_wcett_lb_update:
+        return # No updates received, nothing to do
+    
     current_path = routing_alg.path_cache.get((node.id, dest_id))
     if not current_path:
-        return False, None
+        return
     
-    # Check if any nodes in current path have reported congestion
-    received_congestion = False
-    congested_nodes = []
+    current_edges = []
+    for i in range(len(current_path) - 1):
+        edge = nw.get_edge_between_nodes(current_path[i], current_path[i+1])
+        if edge:
+            current_edges.append(edge)
     
-    for node_id in current_path[1:-1]:
-        transit_node = nw.nodes[node_id]
-
-        if (hasattr(transit_node, 'reported_congestion') and 
-            transit_node.reported_congestion and
-            hasattr(transit_node, 'wcett_lb_update_time') and
-            time.time() - transit_node.wcett_lb_update_time < 5):  # Consider notice valid for 5 seconds
-            
-            received_congestion = True
-            congested_nodes.append(node_id)
+    if not current_edges:
+        return
     
-    if received_congestion:
-        # Calculate WCETT-LB for current path
-        current_edges = []
-        for i in range(len(current_path) - 1):
-            edge = nw.get_edge_between_nodes(current_path[i], current_path[i+1])
+    current_metric = compute_wcett_lb(current_edges, 1024, nw, current_path)
+    
+    all_paths = find_all_paths(nw, node.id, dest_id)
+    if not all_paths or len(all_paths) <= 1:
+        logger.error(f"⚠️ Node {node.id} could not find alternative path to {dest_id}")
+        return # No alternatives available
+    
+    # Find path with best (lowest) WCETT-LB metric (WCETT_LB^i_best)
+    best_path = None
+    best_metric = float('inf')
+    
+    for path in all_paths:
+        if path == current_path:
+            continue
+        
+        path_edges = []
+        for i in range(len(path) - 1):
+            edge = nw.get_edge_between_nodes(path[i], path[i+1])
             if edge:
-                current_edges.append(edge)
+                path_edges.append(edge)
         
-        current_metric = compute_wcett_lb(current_edges, 1024, nw, current_path)
+        if not path_edges:
+            continue
         
-        # Find alternative path avoiding congested nodes
-        new_path = routing_alg.alternative_path(nw, node.id, dest_id, congested_nodes)
+        path_metric = compute_wcett_lb(path_edges, 1024, nw, path)
         
-        if new_path and new_path != current_path:
-            # Calculate WCETT-LB for new path
-            new_edges = []
-            for i in range(len(new_path) - 1):
-                edge = nw.get_edge_between_nodes(new_path[i], new_path[i+1])
-                if edge:
-                    new_edges.append(edge)
-            
-            new_metric = compute_wcett_lb(new_edges, 1024, nw, new_path)
-            
-            # If WCETT-LB_current - WCETT-LB_best > threshold, make the switch
-            if current_metric - new_metric > LOAD_BALANCE_THRESHOLD:
-                routing_alg.path_cache[(node.id, dest_id)] = new_path
-                if len(new_path) >= 2:
-                    node.routing_table[dest_id] = new_path[1]
-                    logger.info(f"Switched path for node {node.id}: {current_path} → {new_path}")
-        else:
-            logger.error(f"⚠️ Node {node.id} could not find alternative path to {dest_id} that avoids {congested_nodes}")
+        if path_metric < best_metric:
+            best_metric = path_metric
+            best_path = path
+    
+    if not best_path:
+        return
+
+    # If WCETT-LB_current - WCETT-LB_best > threshold, make the switch
+    if current_metric - best_metric >= LOAD_BALANCE_THRESHOLD:
+        routing_alg.path_cache[(node.id, dest_id)] = best_path
+        if len(best_path) >= 2:
+            node.routing_table[dest_id] = best_path[1]
+            logger.info(f"Switched path for node {node.id}: {current_path} → {best_path}")

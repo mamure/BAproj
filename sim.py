@@ -1,11 +1,17 @@
-import matplotlib.pyplot as plt
 import argparse
-import os
 import json
+import os
 import time
+
+import matplotlib.pyplot as plt
+
+from log_config import setup_logging, get_logger
 from main import MeshNetworkSimulator
 from network import reset_id_managers
-from log_config import setup_logging, get_logger
+from routing_alg.routing_utils import (
+    CONGESTION_THRESHOLD,
+    LOAD_BALANCE_THRESHOLD
+)
 
 logger = get_logger("sim")
 
@@ -68,63 +74,56 @@ def run_all_sims(base_load=5, duration=180, topology=0, save_dir=None, show_plot
     logger.info(f"Load series: {loads} packets/second")
     
     # Hop Count simulations
-    reset_id_managers()
-    sim = MeshNetworkSimulator(topology)
-    sim.hop_count_sim()
     for load in loads:
         logger.info(f'Hop Count Sim with load {load} pkt/s')
+        reset_id_managers()
+        sim = MeshNetworkSimulator(topology)
+        sim.hop_count_sim()
         er, throughput, delay = sim.simulate_traffic(duration=duration, load=load)
         hop_count_results['er'].append(er)
         hop_count_results['throughput'].append(throughput)
         hop_count_results['delay'].append(delay)
+        del sim # forcing python garbage collection
+        time.sleep(2)
     
-    logger.debug("Cleaning up Hop-count simulator")
-    del sim # forcing python garbage collection
-    time.sleep(2)
-        
     # WCETT simulations
-    reset_id_managers()
-    sim = MeshNetworkSimulator(topology)
-    sim.wcett_sim()
     for load in loads:
         logger.info(f'WCETT Sim with load {load} pkt/s')
+        reset_id_managers()
+        sim = MeshNetworkSimulator(topology)
+        sim.wcett_sim()
         er, throughput, delay = sim.simulate_traffic(duration=duration, load=load)
         wcett_results['er'].append(er)
         wcett_results['throughput'].append(throughput)
         wcett_results['delay'].append(delay)
+        del sim
+        time.sleep(2)
     
-    logger.debug("Cleaning up WCETT simulator")
-    del sim
-    time.sleep(2)
-        
     # WCETT-LB Post simulations
-    reset_id_managers()
-    sim = MeshNetworkSimulator(topology)
-    sim.wcett_lb_post_sim()
     for load in loads:
         logger.info(f'WCETT-LB Post Sim with load {load} pkt/s')
+        reset_id_managers()
+        sim = MeshNetworkSimulator(topology)
+        sim.wcett_lb_post_sim()
         er, throughput, delay = sim.simulate_traffic(duration=duration, load=load)
         wcett_lb_post_results['er'].append(er)
         wcett_lb_post_results['throughput'].append(throughput)
         wcett_lb_post_results['delay'].append(delay)
-    
-    logger.debug("Cleaning up WCETT-LB Post simulator")
-    del sim
-    time.sleep(2)
+        del sim
+        time.sleep(2)
     
     # WCETT-LB Pre simulations
-    reset_id_managers()
-    sim = MeshNetworkSimulator(topology)
-    sim.wcett_lb_pre_sim()
     for load in loads:
         logger.info(f'WCETT-LB Pre Sim with load {load} pkt/s')
+        reset_id_managers()
+        sim = MeshNetworkSimulator(topology)
+        sim.wcett_lb_pre_sim()
         er, throughput, delay = sim.simulate_traffic(duration=duration, load=load)
         wcett_lb_pre_results['er'].append(er)
         wcett_lb_pre_results['throughput'].append(throughput)
         wcett_lb_pre_results['delay'].append(delay)
-
-    logger.debug("Cleaning up WCETT-LB Pre simulator")
-    del sim
+        del sim
+        time.sleep(2)
     
     # Create plots
     # Plot Error Rate
@@ -178,6 +177,8 @@ def run_all_sims(base_load=5, duration=180, topology=0, save_dir=None, show_plot
             'timestamp': timestamp,
             'topology': topology_name,
             'duration': duration,
+            'Congestion threshold': CONGESTION_THRESHOLD,
+            'Load-balancing threshold': LOAD_BALANCE_THRESHOLD,
             'loads': loads
         },
         'hop_count': hop_count_results,
@@ -258,16 +259,17 @@ def run_single_algorithm_sim(algorithm, base_load=5, duration=180, topology=0, s
     logger.info(f"=== Running {algorithm_names[algorithm]} simulation with {topology_name} topology ===")
     logger.info(f"Load series: {loads} packets/second")
     
-    reset_id_managers()
-    sim = MeshNetworkSimulator(topology)
-    algorithm_methods[algorithm](sim)
-    
     for load in loads:
         logger.info(f"{algorithm_names[algorithm]} Sim with load {load} pkt/s")
+        reset_id_managers()
+        sim = MeshNetworkSimulator(topology)
+        algorithm_methods[algorithm](sim)
         er, throughput, delay = sim.simulate_traffic(duration=duration, load=load)
         results['er'].append(er)
         results['throughput'].append(throughput)
         results['delay'].append(delay)
+        del sim
+        time.sleep(1)
     
     # Create plots
     plt.figure(figsize=(10, 6))
@@ -304,6 +306,8 @@ def run_single_algorithm_sim(algorithm, base_load=5, duration=180, topology=0, s
             'algorithm': algorithm,
             'topology': topology_name,
             'duration': duration,
+            'Congestion threshold': CONGESTION_THRESHOLD,
+            'Load-balancing threshold': LOAD_BALANCE_THRESHOLD,
             'loads': loads
         },
         'results': results

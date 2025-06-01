@@ -1,7 +1,8 @@
 import threading
-import random as rnd
 import time
 import queue
+import random as rnd
+
 from packet import Packet
 import routing_alg.wcett_lb_post as wcett_lb_post
 import routing_alg.wcett_lb_pre as wcett_lb_pre
@@ -116,9 +117,9 @@ class Node:
                 routing_algorithm = self.network.routing_algorithm
                 
                 if routing_algorithm and isinstance(routing_algorithm, routing.WCETT_LB_PRERouting):
-                    wcett_lb_pre.predict_congestion(self, self.network)
+                    wcett_lb_pre.predict_congestion(self, self.network, routing_algorithm)
                 elif routing_algorithm and isinstance(routing_algorithm, routing.WCETT_LB_POSTRouting):
-                    wcett_lb_post.update_congest_status(self, self.network)
+                    wcett_lb_post.update_congest_status(self, self.network, routing_algorithm)
                 
                 self.load = self.queue.qsize()
 
@@ -200,6 +201,25 @@ class Node:
         except Exception as e:
             logger.error(f"Error receiving message at Node {self.id}: {e}")
             return False
+    
+    def receive_wcett_lb_update(self, sender_id, paths):
+        """
+        Receive WCETT-LB metric updates from a neighbor node.
+        
+        Args:
+            sender_id: ID of the node sending the update
+            paths: List of (dest_id, path, metric) tuples with updated path metrics
+        """
+        if not hasattr(self, 'wcett_lb_updates'):
+            self.wcett_lb_updates = {}
+        
+        self.wcett_lb_updates[sender_id] = {
+            'timestamp': time.time(),
+            'paths': paths
+        }
+        
+        # Log the update
+        logger.debug(f"Node {self.id} received WCETT-LB update from node {sender_id} with {len(paths)} paths")
     
 class Edge:
     def __init__(self, edge_id, src, dest, bandwidth, loss_rate):

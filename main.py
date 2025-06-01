@@ -1,12 +1,12 @@
-from networks import complex_network
-from networks import advanced_network
-import routing_alg.routing as routing
 import time
 import random as rnd
 import threading
 import argparse
-from network import reset_id_managers
+
+import routing_alg.routing as routing
 from log_config import get_logger, setup_logging
+from networks import complex_network, advanced_network
+from network import reset_id_managers
 
 logger = get_logger("main")
 

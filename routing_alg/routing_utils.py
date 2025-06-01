@@ -1,7 +1,10 @@
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from routing_alg import wcett
 
-CONGESTION_THRESHOLD = 0.5 # Congestion level threshold for mesh routers, σ = 0.5
-LOAD_BALANCE_THRESHOLD = 0.2 # Load-balancing threshold for path switching in a mesh network, ẟ = 0.2
+CONGESTION_THRESHOLD = 0.5 # Congestion level threshold for mesh routers, σ = 0.5, (prediction threshold)
+LOAD_BALANCE_THRESHOLD = 0.3 # Load-balancing threshold for path switching in a mesh network, ẟ = 0.2
 
 def find_all_paths(nw, src, dest, path=None, visited=None, max_depth=10):
     if path is None:
@@ -69,3 +72,44 @@ def get_min_ett(nw):
     
     result = min_ett if min_ett != float('inf') else 1.0
     return result
+
+def compute_ql_b_term(node, nw):
+    total_bw = 0
+    count = 0
+    for neighbor_id in node.neighbors:
+        edge = nw.get_edge_between_nodes(node.id, neighbor_id)
+        if edge and edge.active:
+            total_bw += edge.bandwidth
+            count += 1
+    avg_tx_rate = total_bw / count if count > 0 else 0
+    
+    queue_length = node.queue.qsize()
+    
+    if avg_tx_rate > 0:
+        ql_b_term = queue_length / avg_tx_rate
+    else:
+        ql_b_term = 0
+    return ql_b_term
+
+def get_child_nodes(node, nw):
+    """Find nodes that use this node as their next hop (N_i)
+    
+    Args:
+        node: The node to find children for
+        nw: The network graph
+        
+    Returns:
+        list: List of node IDs that use this node as next hop
+    """
+    child_nodes = []
+    
+    for potential_child_id in nw.nodes:
+        potential_child = nw.nodes[potential_child_id]
+        if potential_child_id != node.id and hasattr(potential_child, 'routing_table'):
+            for dest_id, next_hop in potential_child.routing_table.items():
+                if next_hop == node.id:
+                    if potential_child_id not in child_nodes:
+                        child_nodes.append(potential_child_id)
+                    break
+    
+    return child_nodes

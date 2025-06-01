@@ -1,3 +1,7 @@
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from routing_alg import hop_count as hc
 from routing_alg import wcett, wcett_lb_post, wcett_lb_pre
 from routing_alg.routing_utils import find_all_paths, is_valid_path
@@ -94,41 +98,6 @@ class WCETT_LB_POSTRouting(RoutingProtocol):
         if best_path and len(best_path) >= 2:
             return best_path[1]
         return None
-    
-    def alternative_path(self, nw, src, dest, non_nodes):
-        all_paths = find_all_paths(nw, src, dest)
-        # Filter out paths with client nodes as transit
-        all_paths = [path for path in all_paths if is_valid_path(nw, path)]
-        
-        valid_paths = []
-        
-        for path in all_paths:
-            if not any(node_id in non_nodes for node_id in path[1:-1]):
-                valid_paths.append(path)
-        
-        if not valid_paths:
-            return None
-        
-        path_metrics = []
-        for path in valid_paths:
-            if len(path) < 2:
-                continue
-            
-            edges = []
-            for i in range(len(path) - 1):
-                edge = nw.get_edge_between_nodes(path[i], path[i+1])
-                if edge:
-                    edges.append(edge)
-            
-            if edges:
-                metric = wcett_lb_post.compute_wcett_lb(edges, self.packet_sz, nw, path)
-                path_metrics.append((path, metric))
-        
-        if not path_metrics:
-            return None
-        
-        path_metrics.sort(key=lambda x: x[1])
-        return path_metrics[0][0]
 
 class WCETT_LB_PRERouting(RoutingProtocol):
     def __init__(self, packet_sz=1024, beta=0.5):
@@ -171,37 +140,3 @@ class WCETT_LB_PRERouting(RoutingProtocol):
         if best_path and len(best_path) >= 2:
             return best_path[1]
         return None
-    
-    def alternative_path(self, nw, src, dest, non_nodes):
-        all_paths = find_all_paths(nw, src, dest)
-        # Filter out paths with client nodes as transit
-        all_paths = [path for path in all_paths if is_valid_path(nw, path)]
-        valid_paths = []
-        
-        for path in all_paths:
-            if not any(node_id in non_nodes for node_id in path[1:-1]):
-                valid_paths.append(path)
-        
-        if not valid_paths:
-            return None
-        
-        path_metrics = []
-        for path in valid_paths:
-            if len(path) < 2:
-                continue
-            
-            edges = []
-            for i in range(len(path) - 1):
-                edge = nw.get_edge_between_nodes(path[i], path[i+1])
-                if edge:
-                    edges.append(edge)
-            
-            if edges:
-                metric = wcett_lb_pre.compute_wcett_lb(edges, self.packet_sz, nw, path)
-                path_metrics.append((path, metric))
-        
-        if not path_metrics:
-            return None
-        
-        path_metrics.sort(key=lambda x: x[1])
-        return path_metrics[0][0]

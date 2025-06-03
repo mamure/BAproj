@@ -43,15 +43,16 @@ class MeshNetworkSimulator:
             load (int, optional): packets per second.
         
         Returns:
-            tuple: Tuple containing (error_rate, throughput, avg_delay)
+            tuple: Tuple containing (error_rate, throughput, avg_trans_time, all_trans_time)
         """
         self.network.start_network()
         
         total_packets = 0
         packets_sent = 0
         total_bytes = 0
-        total_delay = 0.0
+        total_tx = 0.0
         packet_results = {}
+        all_tx = []
         
         start_time = time.time()
         
@@ -135,7 +136,7 @@ class MeshNetworkSimulator:
             for t in threads:
                 t.join(timeout=0.5)
             
-            for result in packet_results.values():
+            for result in list(packet_results.values()):
                 if result.get('success'):
                     packets_sent += 1
                     packet = result.get('packet')
@@ -143,15 +144,16 @@ class MeshNetworkSimulator:
                     total_bytes += packet.size
                     
                     if packet.delivered_time and packet.created_time:
-                        delay = packet.delivered_time - packet.created_time
-                        total_delay += delay
+                        tx = packet.delivered_time - packet.created_time
+                        total_tx += tx
+                        all_tx.append(tx)
             
             elapsed = time.time() - start_time
             error_rate = ((total_packets - packets_sent) / total_packets)*100
             
             # Throughput in Kbps (kilobits per second)
             throughput = (total_bytes * 8 / 1000) / elapsed if elapsed > 0 else 0
-            avg_delay = (total_delay / packets_sent) if packets_sent > 0 else 0
+            avg_tx = (total_tx / packets_sent) if packets_sent > 0 else 0
             
             logger.info('=== Simulation Results ===')
             logger.info(f'Duration: {elapsed:.1f} seconds')
@@ -159,9 +161,9 @@ class MeshNetworkSimulator:
             logger.info(f'Successful packets: {packets_sent}')
             logger.info(f'Error rate: {error_rate:.1f}%')
             logger.info(f'Throughput: {throughput:.1f} Kbps')
-            logger.info(f'Average delay: {avg_delay:.2f} seconds')
+            logger.info(f'Average Transmission Time: {avg_tx:.2f} seconds')
             
-            return error_rate, throughput, avg_delay
+            return error_rate, throughput, avg_tx, all_tx
     
     def hop_count_sim(self):
         """

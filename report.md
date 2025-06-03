@@ -111,5 +111,17 @@ I have made some “final” touches to the code and have started to analyze and
 For the discussion, I’m thinking of writing about the importance of choosing the parameter that determines how many nodes per path are allowed to be congested before the path-switching mechanism is activated. The results show that no single value works well across different network sizes.
 In general, I think I’ll focus on parameter tuning in the discussion.
 ## Week 17 (26 may-1 jun)
+After reading through the code to ensure that wcett-lb (pre) was predicting and (post) was reacting in accordance with the recommended information flow diagram, I discovered that the sequential process was not implemented as intended. Additionally, the load-balancing threshold was not being correctly parsed to the nodes during updates. These issues have now been fixed, and I have "new results" that I will need to analyze and discuss — though that part is more or less writing itself. I can still use the comments made on the "prior" version, as they were general and not specific to the results.
+
+I have also made some minor tweaks to the codebase, including fixes to imports, tests, and other small adjustments.
+
+For the analysis and discussion, I will cover the following points:
+* Load-balancing benefits under increasing traffic
+* Sensitivity to the load balance threshold
+* Hop count was initially used as a baseline ("this has no real knowledge of the network, so should be bad"), but it shows surprisingly good results in the simulations on both topologies. Why is that?
+
+Formally, I would like to confirm:
+1. Should the AI declaration be placed on the first page of the document?
+2. Should I submit a specific version of the GitHub repository?
 ## Week 18 (2-7 jun)
 ## Week 19 (8-10 jun)

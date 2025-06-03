@@ -64,10 +64,18 @@ def run_all_sims(base_load=5, duration=180, topology=0, save_dir=None, show_plot
     os.makedirs(results_dir, exist_ok=True)
     
     # Initialize results dictionaries
-    hop_count_results = {'er': [], 'throughput': [], 'delay': []}
-    wcett_results = {'er': [], 'throughput': [], 'delay': []}
-    wcett_lb_post_results = {'er': [], 'throughput': [], 'delay': []}
-    wcett_lb_pre_results = {'er': [], 'throughput': [], 'delay': []}
+    hop_count_results = {'er': [], 'throughput': [], 'tx': []}
+    wcett_results = {'er': [], 'throughput': [], 'tx': []}
+    wcett_lb_post_results = {'er': [], 'throughput': [], 'tx': []}
+    wcett_lb_pre_results = {'er': [], 'throughput': [], 'tx': []}
+    
+    # Track highest tx runs for each algorithm
+    highest_tx_runs = {
+        'hop_count': {'load': 0, 'tx': 0, 'all_tx': []},
+        'wcett': {'load': 0, 'tx': 0, 'all_tx': []},
+        'wcett_lb_post': {'load': 0, 'tx': 0, 'all_tx': []},
+        'wcett_lb_pre': {'load': 0, 'tx': 0, 'all_tx': []}
+    }
     
     # Run all simulations
     logger.info(f"=== Running simulations with {topology_name} topology, duration={duration}s ===")
@@ -79,10 +87,17 @@ def run_all_sims(base_load=5, duration=180, topology=0, save_dir=None, show_plot
         reset_id_managers()
         sim = MeshNetworkSimulator(topology)
         sim.hop_count_sim()
-        er, throughput, delay = sim.simulate_traffic(duration=duration, load=load)
+        er, throughput, tx, all_tx = sim.simulate_traffic(duration=duration, load=load)
         hop_count_results['er'].append(er)
         hop_count_results['throughput'].append(throughput)
-        hop_count_results['delay'].append(delay)
+        hop_count_results['tx'].append(tx)
+        
+        # Check if this run has higher average transmission time
+        if tx > highest_tx_runs['hop_count']['tx']:
+            highest_tx_runs['hop_count']['load'] = load
+            highest_tx_runs['hop_count']['tx'] = tx
+            highest_tx_runs['hop_count']['all_tx'] = all_tx
+        
         del sim # forcing python garbage collection
         time.sleep(2)
     
@@ -92,10 +107,17 @@ def run_all_sims(base_load=5, duration=180, topology=0, save_dir=None, show_plot
         reset_id_managers()
         sim = MeshNetworkSimulator(topology)
         sim.wcett_sim()
-        er, throughput, delay = sim.simulate_traffic(duration=duration, load=load)
+        er, throughput, tx, all_tx = sim.simulate_traffic(duration=duration, load=load)
         wcett_results['er'].append(er)
         wcett_results['throughput'].append(throughput)
-        wcett_results['delay'].append(delay)
+        wcett_results['tx'].append(tx)
+        
+        # Check if this run has higher average transmission time
+        if tx > highest_tx_runs['wcett']['tx']:
+            highest_tx_runs['wcett']['load'] = load
+            highest_tx_runs['wcett']['tx'] = tx
+            highest_tx_runs['wcett']['all_tx'] = all_tx
+        
         del sim
         time.sleep(2)
     
@@ -105,10 +127,17 @@ def run_all_sims(base_load=5, duration=180, topology=0, save_dir=None, show_plot
         reset_id_managers()
         sim = MeshNetworkSimulator(topology)
         sim.wcett_lb_post_sim()
-        er, throughput, delay = sim.simulate_traffic(duration=duration, load=load)
+        er, throughput, tx, all_tx = sim.simulate_traffic(duration=duration, load=load)
         wcett_lb_post_results['er'].append(er)
         wcett_lb_post_results['throughput'].append(throughput)
-        wcett_lb_post_results['delay'].append(delay)
+        wcett_lb_post_results['tx'].append(tx)
+        
+        # Check if this run has higher average transmission time
+        if tx > highest_tx_runs['wcett_lb_post']['tx']:
+            highest_tx_runs['wcett_lb_post']['load'] = load
+            highest_tx_runs['wcett_lb_post']['tx'] = tx
+            highest_tx_runs['wcett_lb_post']['all_tx'] = all_tx
+        
         del sim
         time.sleep(2)
     
@@ -118,10 +147,17 @@ def run_all_sims(base_load=5, duration=180, topology=0, save_dir=None, show_plot
         reset_id_managers()
         sim = MeshNetworkSimulator(topology)
         sim.wcett_lb_pre_sim()
-        er, throughput, delay = sim.simulate_traffic(duration=duration, load=load)
+        er, throughput, tx, all_tx = sim.simulate_traffic(duration=duration, load=load)
         wcett_lb_pre_results['er'].append(er)
         wcett_lb_pre_results['throughput'].append(throughput)
-        wcett_lb_pre_results['delay'].append(delay)
+        wcett_lb_pre_results['tx'].append(tx)
+        
+        # Check if this run has higher average transmission time
+        if tx > highest_tx_runs['wcett_lb_pre']['tx']:
+            highest_tx_runs['wcett_lb_pre']['load'] = load
+            highest_tx_runs['wcett_lb_pre']['tx'] = tx
+            highest_tx_runs['wcett_lb_pre']['all_tx'] = all_tx
+        
         del sim
         time.sleep(2)
     
@@ -154,19 +190,19 @@ def run_all_sims(base_load=5, duration=180, topology=0, save_dir=None, show_plot
     plt.tight_layout()
     plt.savefig(os.path.join(results_dir, "throughput_comparison.png"))
     
-    # Plot End-to-End Delay
+    # Plot End-to-End Transmission time
     plt.figure(figsize=(10, 6))
-    plt.plot(loads, hop_count_results['delay'], marker='o', label='Hop Count')
-    plt.plot(loads, wcett_results['delay'], marker='s', label='WCETT')
-    plt.plot(loads, wcett_lb_post_results['delay'], marker='^', label='WCETT-LB Post')
-    plt.plot(loads, wcett_lb_pre_results['delay'], marker='P', label='WCETT-LB Pre')
+    plt.plot(loads, hop_count_results['tx'], marker='o', label='Hop Count')
+    plt.plot(loads, wcett_results['tx'], marker='s', label='WCETT')
+    plt.plot(loads, wcett_lb_post_results['tx'], marker='^', label='WCETT-LB Post')
+    plt.plot(loads, wcett_lb_pre_results['tx'], marker='P', label='WCETT-LB Pre')
     plt.xlabel("Load (pkts/sec)")
-    plt.ylabel("End-to-End Delay (s)")
-    plt.title(f"End-to-End Delay Comparison ({topology_name} topology, {duration}s)")
+    plt.ylabel("Transmission Time (s)")
+    plt.title(f"Transmission Time Comparison ({topology_name} topology, {duration}s)")
     plt.legend()
     plt.grid(True)
     plt.tight_layout()
-    plt.savefig(os.path.join(results_dir, "delay_comparison.png"))
+    plt.savefig(os.path.join(results_dir, "tx_comparison.png"))
     
     if show_plots:
         plt.show()
@@ -199,20 +235,42 @@ def run_all_sims(base_load=5, duration=180, topology=0, save_dir=None, show_plot
     logger.info(f"Duration: {duration} seconds per simulation")
     logger.info(f"Loads tested: {loads}")
     
+    # Generate histograms for the runs with highest average transmission time
+    for alg, data in highest_tx_runs.items():
+        if alg in ['hop_count', 'wcett']:
+            continue
+        if data['all_tx']:
+            alg_name = {
+                'hop_count': 'Hop Count',
+                'wcett': 'WCETT',
+                'wcett_lb_post': 'WCETT-LB Post',
+                'wcett_lb_pre': 'WCETT-LB Pre'
+            }[alg]
+            
+            logger.info(f"Generating transmission time histogram for {alg_name} with load {data['load']} pkt/s")
+            generate_trans_histogram(
+                data['all_tx'],
+                alg_name,
+                data['load'],
+                topology_name,
+                duration,
+                results_dir
+            )
+
     return all_results
 
-def run_single_algorithm_sim(algorithm, base_load=5, duration=180, topology=0, save_dir=None, show_plots=True):
+def run_single_algorithm_sim(algorithm, base_load=5, duration=180, topology=0, save_dir=None, show_plots=True, hist_path=None):
     """
     Run simulations for a single routing algorithm.
     
     Args:
         algorithm (str): Routing algorithm to use ('hop', 'wcett', 'wcett_lb_post', or 'wcett_lb_pre')
-        base_load (float, optional): Starting load in packets/second. Defaults to 5. Other loads will follow the pattern:
-                                    [base_load, base_load+5, base_load+15, base_load+25, base_load+30]
+        base_load (float, optional): Starting load in packets/second. Defaults to 5.
         duration (int, optional): Duration for each simulation in seconds. Defaults to 180.
         topology (int, optional): Network topology to use (0=small, 1=big). Defaults to 0.
         save_dir (str, optional): Directory to save results and plots. Defaults to None.
         show_plots (bool, optional): Whether to display plots. Defaults to True.
+        hist_path (str, optional): Path to save the transmission time histogram. Defaults to None.
         
     Returns:
         dict: Dictionary containing the results for the algorithm
@@ -234,7 +292,7 @@ def run_single_algorithm_sim(algorithm, base_load=5, duration=180, topology=0, s
     os.makedirs(results_dir, exist_ok=True)
     
     # Initialize results
-    results = {'er': [], 'throughput': [], 'delay': []}
+    results = {'er': [], 'throughput': [], 'tx': []}
     
     # Map algorithm name to method
     algorithm_methods = {
@@ -259,15 +317,29 @@ def run_single_algorithm_sim(algorithm, base_load=5, duration=180, topology=0, s
     logger.info(f"=== Running {algorithm_names[algorithm]} simulation with {topology_name} topology ===")
     logger.info(f"Load series: {loads} packets/second")
     
+    # Track the run with highest average transmission time
+    highest_tx_run = {
+        'load': 0,
+        'tx': 0,
+        'all_tx': []
+    }
+    
     for load in loads:
         logger.info(f"{algorithm_names[algorithm]} Sim with load {load} pkt/s")
         reset_id_managers()
         sim = MeshNetworkSimulator(topology)
         algorithm_methods[algorithm](sim)
-        er, throughput, delay = sim.simulate_traffic(duration=duration, load=load)
+        er, throughput, tx, all_tx = sim.simulate_traffic(duration=duration, load=load)
         results['er'].append(er)
         results['throughput'].append(throughput)
-        results['delay'].append(delay)
+        results['tx'].append(tx)
+        
+        # Check if this run has higher average transmission time
+        if tx > highest_tx_run['tx']:
+            highest_tx_run['load'] = load
+            highest_tx_run['tx'] = tx
+            highest_tx_run['all_tx'] = all_tx
+        
         del sim
         time.sleep(1)
     
@@ -289,15 +361,27 @@ def run_single_algorithm_sim(algorithm, base_load=5, duration=180, topology=0, s
     plt.savefig(os.path.join(results_dir, f"{algorithm}_throughput.png"))
     
     plt.figure(figsize=(10, 6))
-    plt.plot(loads, results['delay'], marker='^')
+    plt.plot(loads, results['tx'], marker='^')
     plt.xlabel("Load (pkts/sec)")
-    plt.ylabel("End-to-End Delay (s)")
-    plt.title(f"{algorithm_names[algorithm]} End-to-End Delay ({topology_name} topology, {duration}s)")
+    plt.ylabel("Transmission time (s)")
+    plt.title(f"{algorithm_names[algorithm]} Transmission time ({topology_name} topology, {duration}s)")
     plt.grid(True)
-    plt.savefig(os.path.join(results_dir, f"{algorithm}_delay.png"))
+    plt.savefig(os.path.join(results_dir, f"{algorithm}_tx.png"))
     
     if show_plots:
         plt.show()
+    
+    # Generate histogram for the run with highest average transmission time
+    if highest_tx_run['all_tx'] and algorithm in ['wcett_lb_post', 'wcett_lb_pre']:
+        logger.info(f"Generating Transmission Time histogram for {algorithm_names[algorithm]} with load {highest_tx_run['load']} pkt/s")
+        generate_trans_histogram(
+            highest_tx_run['all_tx'],
+            algorithm_names[algorithm],
+            highest_tx_run['load'],
+            topology_name,
+            duration,
+            results_dir
+        )
     
     # Save results
     all_results = {
@@ -321,6 +405,63 @@ def run_single_algorithm_sim(algorithm, base_load=5, duration=180, topology=0, s
     logger.info(f"Timestamp: {timestamp}")
     
     return results
+
+def generate_trans_histogram(all_tx, algorithm, load, topology_name, duration, output_path):
+    """
+    Generate a histogram of end-to-end packet transmission time.
+    
+    Args:
+        all_tx (list): List of packet transmission times in seconds
+        algorithm (str): Name of the routing algorithm
+        load (float): Network load in packets per second
+        topology_name (str): Name of the network topology
+        duration (int): Simulation duration in seconds
+        output_path (str): Directory to save the histogram
+    
+    Returns:
+        str: Path to the saved histogram file
+    """
+    if not all_tx:
+        logger.warning("No transmission time data available to generate histogram")
+        return None
+    
+    # Convert algorithm name to consistent filename format (lowercase with underscores)
+    alg_filename = algorithm.lower().replace(' ', '_').replace('-', '_')
+    
+    # Save raw data to CSV file
+    os.makedirs(output_path, exist_ok=True)
+    csv_filename = f"{alg_filename}_tx_data_{int(load)}pps.csv"
+    csv_filepath = os.path.join(output_path, csv_filename)
+    
+    # Write raw transmission time data
+    with open(csv_filepath, 'w') as f:
+        f.write("packet_id,transmission_time_seconds\n")
+        for i, tx_time in enumerate(all_tx):
+            f.write(f"{i},{tx_time}\n")
+    
+    logger.info(f"Raw transmission time data saved to: {csv_filepath}")
+        
+    plt.figure(figsize=(10, 6))
+    plt.hist(all_tx, bins=50, alpha=0.75, edgecolor='black')
+    
+    # Add mean and median lines
+    mean_tx = sum(all_tx) / len(all_tx)
+    
+    plt.axvline(mean_tx, color='r', linestyle='dashed', linewidth=1, label=f'Mean: {mean_tx:.3f}s')
+    
+    plt.xlabel("Transmission Time (seconds)")
+    plt.ylabel("Number of Packets")
+    plt.title(f"{algorithm} Transmission Distribution\n(Load: {load} pkt/s, {topology_name} topology, {duration}s)")
+    plt.legend()
+    plt.grid(True, alpha=0.3)
+    
+    # Make sure the directory exists
+    histogram_filename = f"{alg_filename}_tx_histogram_{int(load)}pps.png"
+    histogram_filepath = os.path.join(output_path, histogram_filename)
+    plt.savefig(histogram_filepath)
+    logger.info(f"Transmission Time histogram saved to: {histogram_filepath}")
+    return histogram_filepath
+        
 
 def main():
     """

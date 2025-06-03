@@ -14,7 +14,7 @@ This simulator allows you to compare the performance of different routing algori
 The simulator measures and compares:
 - **Error Rate** - Percentage of packets that failed to reach destination
 - **Throughput** - Network throughput in Kbps
-- **End-to-End Delay** - Average time for packets to reach destination
+- **End-to-End Transmission Time** - Average time for packets to reach destination
 
 ## Installation
 
@@ -110,7 +110,7 @@ The simulator supports two network topologies:
 Simulation results are saved to:
 - A directory named with topology information
 - Includes JSON data files with detailed simulation results
-- Generates comparison plots for error rate, throughput, and end-to-end delay
+- Generates comparison plots for error rate, throughput, and end-to-end transmission time.
 
 ## Project Structure
 

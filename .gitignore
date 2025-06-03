@@ -5,6 +5,7 @@ logs/
 
 # Ignore log files
 *.log
+*.csv
 
 # Ignore build directories
 dist/

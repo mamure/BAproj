@@ -8,11 +8,8 @@ import visualiser as vis
 
 def initialize_network():
     """
-    Creates a network with:
-    - Internet Gateway nodes (IGWs)
-    - Mesh Routers (MRs)
-    - Clients (C)
-    The routers are interconnected in a mesh-like manner, and clients are attached to routers.
+    Creates a network with strategic bottlenecks and diverse link characteristics
+    to better demonstrate load balancing algorithms.
     
     Returns:
         Network: A Network object containing all nodes and edges.
@@ -33,26 +30,29 @@ def initialize_network():
     c11 = network.create_node("C")
     c12 = network.create_node("C")
     
-    network.add_edge(igw, mr1, 20, 0.1)
-    network.add_edge(igw, mr2, 60, 0.1)
-    network.add_edge(igw, mr3, 40, 0.1)
 
-    network.add_edge(mr1, mr4, 20, 0.1)
-    network.add_edge(mr2, mr5, 150, 0.1)
-    network.add_edge(mr3, mr6, 5, 0.1)
-    network.add_edge(mr4, mr5, 150, 0.1)
-    network.add_edge(mr5, mr6, 70, 0.1)
+    network.add_edge(igw, mr1, 200, 0.01)
+    network.add_edge(igw, mr2, 180, 0.015)
+    network.add_edge(igw, mr3, 120, 0.02)
 
-    network.add_edge(c7, mr1, 45, 0.1)
-    network.add_edge(c7, mr4, 55, 0.1)
-    network.add_edge(c8, mr1, 45, 0.1)
-    network.add_edge(c8, mr5, 180, 0.1)
-    network.add_edge(c9, mr4, 55, 0.1)
-    network.add_edge(c10, mr6, 35, 0.1)
-    network.add_edge(c10, mr5, 180, 0.1)
-    network.add_edge(c11, mr3, 45, 0.1)
-    network.add_edge(c11, mr6, 75, 0.1)
-    network.add_edge(c12, mr3, 45, 0.1)
+    network.add_edge(mr1, mr4, 90, 0.04)
+    network.add_edge(mr4, mr5, 80, 0.05)
+    network.add_edge(mr5, mr6, 120, 0.03)
+    network.add_edge(mr1, mr2, 75, 0.05)
+    network.add_edge(mr2, mr5, 25, 0.25)
+    network.add_edge(mr2, mr3, 65, 0.08)
+    network.add_edge(mr3, mr6, 30, 0.15)
+
+    network.add_edge(c7, mr1, 40, 0.15)
+    network.add_edge(c7, mr4, 45, 0.18)
+    network.add_edge(c8, mr1, 38, 0.12)
+    network.add_edge(c8, mr5, 60, 0.20)
+    network.add_edge(c9, mr4, 50, 0.15)
+    network.add_edge(c10, mr6, 30, 0.12)
+    network.add_edge(c10, mr5, 35, 0.20)
+    network.add_edge(c11, mr3, 40, 0.15)
+    network.add_edge(c11, mr6, 60, 0.18)
+    network.add_edge(c12, mr3, 42, 0.15)
 
     return network
     

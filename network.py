@@ -15,7 +15,10 @@ NODE_ID_COUNTER = 0
 EDGE_ID_COUNTER = 0
 PACKET_ID_COUNTER = 0
 
-BUFFER_SIZE = 75 # message queue maximum length
+BUFFER_SIZE = { # message queue maximum length
+    "IGW": 150,
+    "MR": 75
+} 
 QUEUE_PROCESS_TIME = 0.05  # time for node to process packet. Adjust to fill up queue. ≈ 20 pkt/s to fill up
 
 def node_id_manager():
@@ -73,7 +76,8 @@ class Node:
         self.routing_table = {}
         self.load = 0
         self.congest_status = False
-        self.queue = queue.Queue(maxsize=BUFFER_SIZE)
+        buffer_size = BUFFER_SIZE.get(type, 75)  # Default to 75 if type not found
+        self.queue = queue.Queue(maxsize=buffer_size)
         self.received_packets = []
         self.sent_packets = {}
         self.dropped_packets = []
@@ -147,7 +151,7 @@ class Node:
                     logger.debug(f"Node {self.id} received ACK from {packet.src_id} for packet to {packet.dest_id}")
                 
                 if self.type == "IGW":
-                    time.sleep(QUEUE_PROCESS_TIME * 0.1)  # IGWs are faster but not instant
+                    time.sleep(QUEUE_PROCESS_TIME * 0.01)  # IGWs are alot faster but not instant
                 else:
                     time.sleep(QUEUE_PROCESS_TIME)
                 if packet.type == 'DATA':
@@ -202,7 +206,7 @@ class Node:
             logger.error(f"Error receiving message at Node {self.id}: {e}")
             return False
     
-    def receive_wcett_lb_update(self, sender_id, paths):
+    def receive_wcett_lb_update(self, sender_id, paths, state_changed=False):
         """
         Receive WCETT-LB metric updates from a neighbor node.
         
@@ -214,8 +218,9 @@ class Node:
             self.wcett_lb_updates = {}
         
         self.wcett_lb_updates[sender_id] = {
+            'paths': paths,
             'timestamp': time.time(),
-            'paths': paths
+            'state_changed': state_changed
         }
         
         # Log the update
@@ -264,8 +269,8 @@ class Edge:
         if rnd.random() < self.loss_rate:
             return {'success': False, 'reason': 'packet_loss'}
         
-        delay = packet.size / self.bandwidth * 0.01
-        time.sleep(delay)
+        tx = packet.size / self.bandwidth * 0.01
+        time.sleep(tx)
         
         receive_result = dest.receive_message(packet, src)
         if not receive_result:

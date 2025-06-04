@@ -147,7 +147,7 @@ def update_path(node, nw, dest_id, routing_alg):
     
     all_paths = find_all_paths(nw, node.id, dest_id)
     if not all_paths or len(all_paths) <= 1:
-        # logger.error(f"⚠️ Node {node.id} could not find alternative path to {dest_id}")
+        logger.error(f"⚠️ Node {node.id} could not find alternative path to {dest_id}")
         return # No alternatives available
     
     # Find path with best (lowest) WCETT-LB metric (WCETT_LB^i_best)

@@ -8,8 +8,8 @@ This simulator allows you to compare the performance of different routing algori
 
 1. **Hop Count** - Traditional shortest path routing based on hop count using Breadth-First Search.
 2. **WCETT** - Weighted Cumulative Expected Transmission Time
-3. **WCETT-LB Post** - WCETT with post-selection load balancing
-4. **WCETT-LB Pre** - WCETT with pre-selection load balancing
+4. **WCETT-LB Pre** - WCETT with pre congestion awareness load balancing
+3. **WCETT-LB Post** - WCETT with post congestion awareness load balancing
 
 The simulator measures and compares:
 - **Error Rate** - Percentage of packets that failed to reach destination
@@ -117,9 +117,12 @@ Simulation results are saved to:
 - `main.py` - Main simulator entry point with interactive menu
 - `sim.py` - Comprehensive simulation runner for comparing algorithms
 - `network.py` - Core network implementation
-- `routing.py` - Implementation of routing algorithms
-- `complex_network.py` - Definition of the small network topology
-- `advanced_network.py` - Definition of the bigger network topology
+- `routing_alg/` - Directory containing routing algorithm implementations:
+  - `hop_count.py` - Hop count based routing
+  - `wcett.py` - WCETT routing implementation
+  - `routing_utils.py` - Utility functions for routing algorithms
+- `networks/` - Network topology definitions
+- `log_config.py` - Logging configuration
 
 ## Author
 

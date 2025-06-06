@@ -1,6 +1,16 @@
 from collections import deque
 
 def shortest_path(graph, src_id, dest_id):
+    """Finds the shortest path between source and destination nodes using breadth-first search
+
+    Args:
+        graph (NetworkGraph): The network graph object containing nodes and connectivity information
+        src_id (str/int): ID of the source node
+        dest_id (str/int): ID of the destination node
+
+    Returns:
+        list: Ordered list of node IDs representing the shortest path, or None if no path exists
+    """
     src_node = graph.nodes[src_id]
     if dest_id not in graph.nodes:
         return []

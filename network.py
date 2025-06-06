@@ -64,11 +64,12 @@ def reset_id_managers():
 
 class Node:
     def __init__(self, node_id, type, network):
-        """
+        """Initialize a new network node
+
         Args:
-            node_id (int)
-            type (str)
-            network (network)
+            node_id (int): Unique identifier for the node
+            type (str): Node type (e.g., "IGW", "MR")
+            network (Graph): Reference to the parent network graph
         """
         self.id = node_id
         self.type = type
@@ -349,6 +350,16 @@ class Graph:
         return None
     
     def send_packet_graph(self, src_id, dest_id):
+        """Send a packet from a source node to a destination node through the network
+
+        Args:
+            src_id (int): ID of the source node
+            dest_id (int): ID of the destination node
+
+        Returns:
+            dict: Result containing 'success' boolean and either 'reason' for failure
+                  or 'packet' object for successful delivery
+        """
         if src_id not in self.nodes or dest_id not in self.nodes:
             logger.error(f"Invalid node ID: {src_id} or {dest_id}")
             return {'success': False, 'reason': 'invalid_node_id'}

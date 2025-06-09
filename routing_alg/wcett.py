@@ -13,7 +13,7 @@ def compute_ett(edge, packet_sz):
     etx = 1 / (1 - p)
     
     # Convert bandwidth from Mbps to bps
-    bandwidth_bps = edge.bandwidth * 1000000 # 1 Mbps = 1,000,000 bps
+    bandwidth_bps = edge.bandwidth * 1_000_000 # 1 Mbps = 1,000,000 bps
     # Convert packet size from bytes to bits
     packet_bits = packet_sz * 8
     

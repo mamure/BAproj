@@ -3,8 +3,8 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from routing_alg import wcett
 
-CONGESTION_THRESHOLD = 0.5 # Congestion level threshold for mesh routers, σ = 0.5
-LOAD_BALANCE_THRESHOLD = 0.4 # Load-balancing threshold for path switching in a mesh network, ẟ = 0.4
+CONGESTION_THRESHOLD = 0.005 # Congestion level threshold for mesh routers, σ = 0.005
+LOAD_BALANCE_THRESHOLD = 0.001 # Load-balancing threshold for path switching in a mesh network, ẟ = 0.004
 
 def find_all_paths(nw, src, dest, path=None, visited=None, max_depth=10):
     """Recursively finds all possible paths between source and destination nodes
@@ -127,11 +127,8 @@ def compute_ql_b_term(node, nw):
         if edge and edge.active:
             total_bw += edge.bandwidth
             count += 1
-    # Calculate average bandwidth (initially in Mbps)
-    avg_tx_rate = total_bw / count if count > 0 else 0
-
-    # Convert to bits per second
-    avg_tx_rate = (avg_tx_rate * 1024 * 8)
+    # Calculate average bandwidth in bits per second
+    avg_tx_rate = (total_bw / count) * 1_000_000 if count > 0 else 0
 
     # Convert queue length to bits
     queue_length = node.queue.qsize() * (1024 * 8)

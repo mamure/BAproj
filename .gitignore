@@ -2,6 +2,7 @@
 __pycache__/
 lib/
 logs/
+simulation_results/
 
 # Ignore log files
 *.log

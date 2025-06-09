@@ -127,14 +127,17 @@ def compute_ql_b_term(node, nw):
         if edge and edge.active:
             total_bw += edge.bandwidth
             count += 1
+    # Calculate average bandwidth (initially in Mbps)
     avg_tx_rate = total_bw / count if count > 0 else 0
-    
-    queue_length = node.queue.qsize()
-    
-    if avg_tx_rate > 0:
-        ql_b_term = queue_length / avg_tx_rate
-    else:
-        ql_b_term = 0
+
+    # Convert to bits per second
+    avg_tx_rate = (avg_tx_rate * 1024 * 8)
+
+    # Convert queue length to bits
+    queue_length = node.queue.qsize() * (1024 * 8)
+
+    # Calculate queue length to bandwidth ratio
+    ql_b_term = queue_length / avg_tx_rate  # bits / (bits/second) = seconds
     return ql_b_term
 
 def get_child_nodes(node, nw):

@@ -4,7 +4,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from routing_alg import wcett
 
 CONGESTION_THRESHOLD = 0.005 # Congestion level threshold for mesh routers, σ = 0.005
-LOAD_BALANCE_THRESHOLD = 0.001 # Load-balancing threshold for path switching in a mesh network, ẟ = 0.004
+LOAD_BALANCE_THRESHOLD = 0.004 # Load-balancing threshold for path switching in a mesh network, ẟ = 0.004
 
 def find_all_paths(nw, src, dest, path=None, visited=None, max_depth=10):
     """Recursively finds all possible paths between source and destination nodes

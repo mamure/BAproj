@@ -35,5 +35,4 @@ def shortest_path(graph, src_id, dest_id):
                 if neighbor_node.type == "C" and neighbor_id != dest_id:
                     continue
                 queue.append((graph.nodes[neighbor_id], path + [neighbor_id]))
-
     return None

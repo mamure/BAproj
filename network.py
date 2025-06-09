@@ -20,6 +20,7 @@ BUFFER_SIZE = { # message queue maximum length
     "MR": 75
 } 
 QUEUE_PROCESS_TIME = 0.05  # time for node to process packet. Adjust to fill up queue. ≈ 20 pkt/s to fill up
+PACKET_SIZE = 1024 # Standardized packet size for DATA packets
 
 def node_id_manager():
     """Generate and return a unique ID for a new node.
@@ -77,7 +78,7 @@ class Node:
         self.routing_table = {}
         self.load = 0
         self.congest_status = False
-        buffer_size = BUFFER_SIZE.get(type, 75)  # Default to 75 if type not found
+        buffer_size = BUFFER_SIZE.get(type, 75)
         self.queue = queue.Queue(maxsize=buffer_size)
         self.received_packets = []
         self.sent_packets = {}
@@ -223,9 +224,6 @@ class Node:
             'timestamp': time.time(),
             'state_changed': state_changed
         }
-        
-        # Log the update
-        logger.debug(f"Node {self.id} received WCETT-LB update from node {sender_id} with {len(paths)} paths")
     
 class Edge:
     def __init__(self, edge_id, src, dest, bandwidth, loss_rate):
@@ -368,7 +366,7 @@ class Graph:
         dest = self.nodes[dest_id]
         
         packet_id = packet_id_manager()
-        packet = Packet(packet_id, src_id, dest_id, 1024, "DATA")
+        packet = Packet(packet_id, src_id, dest_id, PACKET_SIZE, "DATA")
         packet.route_taken.append(src_id)
         
         if not src.running:

@@ -42,5 +42,4 @@ def compute_wcett(edges, packet_sz, beta = 0.5):
     max_channel_ett = max(max_ett_channel.values())
     
     wcett = (1 - beta) * ett_sum + beta * max_channel_ett
-    
     return wcett

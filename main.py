@@ -140,7 +140,6 @@ class MeshNetworkSimulator:
                 if result.get('success'):
                     packets_sent += 1
                     packet = result.get('packet')
-                    
                     total_bytes += packet.size
                     
                     if packet.delivered_time and packet.created_time:
@@ -191,7 +190,6 @@ class MeshNetworkSimulator:
                     logger.info(f"{node.id} → {igw_id}: {node.routing_table[igw_id]}")
         
         logger.info(f"Hop count routing tables created for {len(self.network.nodes)} nodes")
-                    
         return True
     
     def wcett_sim(self):
@@ -220,7 +218,6 @@ class MeshNetworkSimulator:
                     logger.info(f"{node.id} → {igw_id}: {node.routing_table[igw_id]}")
         
         logger.info(f"WCETT routing tables created for {len(self.network.nodes)} nodes")
-        
         return True
     
     def wcett_lb_post_sim(self):
@@ -254,7 +251,6 @@ class MeshNetworkSimulator:
             for (src, dest), path in wcett_lb_post_algorithm.path_cache.items():
                 if len(path) > 0:
                     logger.info(f"{src} → {dest}: {path}")
-
         return True
     
     def wcett_lb_pre_sim(self):
@@ -303,7 +299,6 @@ def main():
                         help='Simulation duration in seconds (default: 120)')
     parser.add_argument('-l', '--load', type=float, default=20,
                         help='Network load in packets per second (default: 20)')
-    
     args = parser.parse_args()
     
     sim = MeshNetworkSimulator(args.topology)
